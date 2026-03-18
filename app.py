@@ -98,10 +98,7 @@ def inject_user():
 # ===== PAGE D'ACCUEIL =====
 @app.route('/')
 def index():
-    """Page d'accueil avec statistiques"""
-    try:
-        conn = get_db_connection()
-        cur = conn.cursor()
+    return "SITE OK 🚀"
         
         # Récupérer les publications récentes
         cur.execute("""
