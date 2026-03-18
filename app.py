@@ -17,14 +17,7 @@ login_manager.login_view = 'login'
 
 # Configuration de la base de données
 def get_db_connection():
-    try:
-        conn = psycopg.connect(
-            host="localhost",
-            database="dbskillup",
-            user="postgres",
-            password="postgres",  # ← METTEZ VOTRE MOT DE PASSE POSTGRES ICI
-            row_factory=dict_row
-        )
+    return None
         return conn
     except Exception as e:
         print(f"❌ ERREUR CONNEXION DB: {e}")
