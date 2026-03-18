@@ -18,10 +18,6 @@ login_manager.login_view = 'login'
 # Configuration de la base de données
 def get_db_connection():
     return None
-        return conn
-    except Exception as e:
-        print(f"❌ ERREUR CONNEXION DB: {e}")
-        return None
 
 # Test de connexion au démarrage
 try:
