@@ -1,7 +1,7 @@
 from flask import Flask, render_template, request, redirect, url_for, flash, jsonify, session
 from flask_login import LoginManager, UserMixin, login_user, logout_user, login_required, current_user
-import psycopg2
-from psycopg2.extras import RealDictCursor
+import psycopg
+from psycopg.rows import dict_row
 from werkzeug.security import generate_password_hash, check_password_hash
 from datetime import datetime, timedelta
 import json
@@ -18,12 +18,12 @@ login_manager.login_view = 'login'
 # Configuration de la base de données
 def get_db_connection():
     try:
-        conn = psycopg2.connect(
+        conn = psycopg.connect(
             host="localhost",
             database="dbskillup",
             user="postgres",
             password="postgres",  # ← METTEZ VOTRE MOT DE PASSE POSTGRES ICI
-            cursor_factory=RealDictCursor
+            row_factory=dict_row
         )
         return conn
     except Exception as e:
