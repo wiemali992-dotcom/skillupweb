@@ -1,0 +1,1133 @@
+{% extends "base.html" %}
+
+{% block title %}Profil de {{ user_profile.prenom }} {{ user_profile.nom }} - SkillUp{% endblock %}
+
+{% block content %}
+<div class="fade-in">
+    <div class="profile-container">
+        <!-- Header -->
+        <div class="profile-header">
+            <a href="{{ url_for('index') }}" class="btn btn-secondary back-btn">
+                <i class="fas fa-arrow-left"></i>
+                Retour à l'accueil
+            </a>
+
+            <!-- Profile Card -->
+            <div class="profile-main-card">
+                <div class="card-top-bar"></div>
+                
+                <div class="profile-card-content">
+                    <!-- Avatar and Basic Info with Reputation side by side -->
+                    <div class="profile-header-section">
+                        <!-- Left side: Avatar and Basic Info -->
+                        <div class="profile-info-left">
+                            <div class="profile-avatar-large">
+                                {{ user_profile.prenom[0] }}{{ user_profile.nom[0] }}
+                            </div>
+                            
+                            <div class="profile-header-info">
+                                <h1>{{ user_profile.prenom }} {{ user_profile.nom }}</h1>
+                                
+                                <div class="profile-meta">
+                                    {% if user_profile.filiere %}
+                                    <span class="meta-item">
+                                        <i class="fas fa-graduation-cap"></i>
+                                        {{ user_profile.filiere }}
+                                    </span>
+                                    {% endif %}
+                                    
+                                    {% if user_profile.annee_etude %}
+                                    <span class="meta-item">
+                                        <i class="fas fa-calendar-alt"></i>
+                                        {{ user_profile.annee_etude }}ère année
+                                    </span>
+                                    {% endif %}
+                                    
+                                    <span class="meta-item">
+                                        <i class="fas fa-user-clock"></i>
+                                        Membre depuis {{ user_profile.date_inscription.strftime('%m/%Y') }}
+                                    </span>
+                                </div>
+                                
+                                <div class="profile-actions">
+                                    {% if is_own_profile %}
+                                        <a href="{{ url_for('edit_profile') }}" class="btn btn-primary">
+                                            <i class="fas fa-edit"></i>
+                                            Modifier mon profil
+                                        </a>
+                                    {% else %}
+                                        <a href="{{ url_for('conversation', user_id=user_profile.id) }}" class="btn btn-primary">
+                                            <i class="fas fa-comment"></i>
+                                            Contacter
+                                        </a>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Right side: Reputation Card -->
+                        <div class="reputation-card">
+                            <h3>
+                                <i class="fas fa-trophy"></i>
+                                Réputation
+                            </h3>
+                            
+                            <div class="score-stats">
+                                <div class="score-stat">
+                                    <div class="score-value">{{ user_profile.score|default(0) }}</div>
+                                    <div class="score-label">Points</div>
+                                </div>
+                                
+                                <div class="score-stat">
+                                    <div class="score-value">{{ user_profile.total_helps|default(0) }}</div>
+                                    <div class="score-label">Aides</div>
+                                </div>
+                                
+                                <div class="score-stat">
+                                    <div class="score-value">{{ "%.1f"|format(user_profile.rating|default(5.0)) }}/5</div>
+                                    <div class="score-label">Note</div>
+                                </div>
+                            </div>
+                            
+                            {% if not is_own_profile and current_user.is_authenticated %}
+                            <div class="help-action">
+                                <a href="{{ url_for('request_help', user_id=user_profile.id) }}" class="btn btn-primary request-help-btn">
+                                    <i class="fas fa-hands-helping"></i>
+                                    Demander de l'aide
+                                </a>
+                                <p class="help-info">
+                                    <i class="fas fa-info-circle"></i>
+                                    Gagnez des points en confirmant l'aide
+                                </p>
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <!-- Detailed Info Grid -->
+                    <div class="profile-details-grid">
+                        <!-- Contact Info -->
+                        <div class="details-column">
+                            <div class="info-section">
+                                <h3>
+                                    <i class="fas fa-id-card"></i>
+                                    Informations de contact
+                                </h3>
+                                
+                                <div class="info-list">
+                                    <div class="info-item">
+                                        <div class="info-icon">
+                                            <i class="fas fa-envelope"></i>
+                                        </div>
+                                        <div class="info-content">
+                                            <div class="info-label">Email</div>
+                                            <div class="info-value">{{ user_profile.email }}</div>
+                                        </div>
+                                    </div>
+                                    
+                                    {% if user_profile.telephone %}
+                                    <div class="info-item">
+                                        <div class="info-icon">
+                                            <i class="fas fa-phone-alt"></i>
+                                        </div>
+                                        <div class="info-content">
+                                            <div class="info-label">Téléphone</div>
+                                            <div class="info-value">{{ user_profile.telephone }}</div>
+                                        </div>
+                                    </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- About & Skills -->
+                        <div class="details-column">
+                            <!-- About Section -->
+                            {% if user_profile.description %}
+                            <div class="about-section">
+                                <h3>
+                                    <i class="fas fa-user-circle"></i>
+                                    À propos
+                                </h3>
+                                <div class="about-content">
+                                    {{ user_profile.description }}
+                                </div>
+                            </div>
+                            {% endif %}
+                            
+                            <!-- Skills Section -->
+                            <div class="skills-section">
+                                <h3>
+                                    <i class="fas fa-briefcase"></i>
+                                    Compétences
+                                </h3>
+                                
+                                {% if competences %}
+                                    <div class="skills-grid">
+                                        {% for comp in competences %}
+                                            <div class="skill-item">
+                                                <div class="skill-name">{{ comp.competence }}</div>
+                                                <div class="skill-level level-{{ comp.niveau|lower }}">
+                                                    {{ comp.niveau }}
+                                                </div>
+                                            </div>
+                                        {% endfor %}
+                                    </div>
+                                {% else %}
+                                    <div class="empty-skills">
+                                        <i class="fas fa-tools"></i>
+                                        <p>Aucune compétence ajoutée</p>
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Publications Section - Liste verticale -->
+        <div class="publications-section">
+            <div class="section-header">
+                <h2>
+                    <i class="fas fa-newspaper"></i>
+                    Publications
+                </h2>
+                <span class="section-count">{{ publications|length }} publication(s)</span>
+            </div>
+            
+            {% if publications %}
+                <div class="publications-list">
+                    {% for post in publications %}
+                    <div class="publication-list-item">
+                        <div class="publication-list-header">
+                            <div class="publication-type type-{{ post.type_publication }}">
+                                <i class="fas 
+                                    {% if post.type_publication == 'offre' %}fa-hand-holding-heart
+                                    {% elif post.type_publication == 'demande' %}fa-question-circle
+                                    {% else %}fa-bullhorn{% endif %}"></i>
+                                {{ post.type_publication|upper }}
+                            </div>
+                            
+                            {% if current_user.is_authenticated and current_user.id == post.utilisateur_id %}
+                            <div class="publication-actions">
+                                <a href="{{ url_for('edit_post', post_id=post.id) }}" class="action-btn edit-btn" title="Modifier">
+                                    <i class="fas fa-edit"></i>
+                                </a>
+                                <form action="{{ url_for('delete_post', post_id=post.id) }}" method="POST" 
+                                      onsubmit="return confirm('Supprimer cette publication ?');">
+                                    <button type="submit" class="action-btn delete-btn" title="Supprimer">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </form>
+                            </div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="publication-list-content">
+                            <h3 class="publication-title">{{ post.titre }}</h3>
+                            
+                            <div class="publication-text">
+                                <p>{{ post.contenu }}</p>
+                            </div>
+                            
+                            {% if post.tags and post.tags|length > 0 %}
+                            <div class="publication-tags">
+                                {% for tag in post.tags %}
+                                <span class="tag">#{{ tag }}</span>
+                                {% endfor %}
+                            </div>
+                            {% endif %}
+                            
+                            <div class="publication-list-footer">
+                                <div class="publication-date">
+                                    <i class="far fa-clock"></i>
+                                    {{ post.date_publication.strftime('%d/%m/%Y à %H:%M') }}
+                                </div>
+                                
+                                {% if current_user.is_authenticated and current_user.id != post.utilisateur_id %}
+                                <a href="{{ url_for('conversation', user_id=post.utilisateur_id) }}" class="btn btn-secondary contact-btn">
+                                    <i class="fas fa-comment"></i>
+                                    Contacter
+                                </a>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <div class="empty-publications">
+                    <div class="empty-icon">
+                        <i class="fas fa-newspaper"></i>
+                    </div>
+                    <h4>Aucune publication</h4>
+                    <p>Cet utilisateur n'a pas encore publié de contenu</p>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<style>
+    /* Container */
+    .profile-container {
+        max-width: 1200px;
+        margin: 0 auto;
+    }
+
+    /* Header */
+    .profile-header {
+        margin-bottom: 3rem;
+    }
+
+    .back-btn {
+        margin-bottom: 1.5rem;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    /* Main Profile Card */
+    .profile-main-card {
+        background: white;
+        border-radius: var(--radius-xl);
+        overflow: hidden;
+        box-shadow: var(--shadow-xl);
+        border: 1px solid var(--cloud-200);
+    }
+
+    .card-top-bar {
+        height: 6px;
+        width: 100%;
+        background: linear-gradient(90deg, var(--primary-500) 0%, var(--accent-indigo) 100%);
+    }
+
+    .profile-card-content {
+        padding: 2.5rem;
+    }
+
+    /* Profile Header Section - Side by side layout */
+    .profile-header-section {
+        display: flex;
+        gap: 2.5rem;
+        margin-bottom: 2.5rem;
+        padding-bottom: 2.5rem;
+        border-bottom: 1px solid var(--cloud-200);
+    }
+
+    /* Left side: Avatar and Basic Info */
+    .profile-info-left {
+        display: flex;
+        gap: 2.5rem;
+        flex: 1;
+    }
+
+    .profile-avatar-large {
+        width: 150px;
+        height: 150px;
+        background: linear-gradient(135deg, var(--primary-400) 0%, var(--accent-indigo) 100%);
+        border-radius: var(--radius-xl);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-size: 3.5rem;
+        font-weight: 700;
+        flex-shrink: 0;
+        box-shadow: var(--shadow-lg);
+    }
+
+    .profile-header-info {
+        flex: 1;
+    }
+
+    .profile-header-info h1 {
+        margin: 0 0 1rem 0;
+        color: var(--cloud-900);
+        font-size: 2.2rem;
+    }
+
+    .profile-meta {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 1.5rem;
+        margin-bottom: 1.5rem;
+    }
+
+    .meta-item {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        color: var(--cloud-600);
+        font-size: 0.95rem;
+    }
+
+    .meta-item i {
+        color: var(--primary-500);
+    }
+
+    .profile-actions {
+        margin-top: 1.5rem;
+    }
+
+    /* Style spécifique pour le bouton Modifier mon profil */
+    .profile-actions .btn-primary {
+        background: linear-gradient(135deg, var(--primary-500) 0%, var(--primary-600) 100%);
+        border: none;
+        padding: 0.875rem 1.75rem;
+        font-weight: 600;
+        border-radius: var(--radius-lg);
+        display: inline-flex;
+        align-items: center;
+        gap: 0.75rem;
+        transition: all var(--transition);
+    }
+
+    .profile-actions .btn-primary:hover {
+        transform: translateY(-2px);
+        box-shadow: var(--shadow-lg);
+        background: linear-gradient(135deg, var(--primary-600) 0%, var(--primary-700) 100%);
+    }
+
+    /* Right side: Reputation Card */
+    .reputation-card {
+        background: linear-gradient(135deg, rgba(59, 130, 246, 0.05) 0%, rgba(99, 102, 241, 0.05) 100%);
+        border-radius: var(--radius-xl);
+        padding: 1.75rem;
+        border: 1px solid rgba(59, 130, 246, 0.1);
+        width: 320px;
+        flex-shrink: 0;
+    }
+
+    .reputation-card h3 {
+        margin: 0 0 1.5rem 0;
+        color: var(--cloud-900);
+        font-size: 1.3rem;
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        text-align: center;
+    }
+
+    .score-stats {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 1rem;
+        margin-bottom: 1.5rem;
+    }
+
+    .score-stat {
+        text-align: center;
+        padding: 1rem;
+        background: white;
+        border-radius: var(--radius);
+        border: 1px solid var(--cloud-200);
+    }
+
+    .score-value {
+        font-size: 1.8rem;
+        font-weight: 800;
+        color: var(--primary-600);
+        line-height: 1;
+        margin-bottom: 0.25rem;
+    }
+
+    .score-label {
+        color: var(--cloud-600);
+        font-size: 0.85rem;
+    }
+
+    .help-action {
+        text-align: center;
+    }
+
+    .request-help-btn {
+        width: 100%;
+        padding: 1rem;
+        font-weight: 600;
+        margin-bottom: 0.75rem;
+        background: linear-gradient(135deg, var(--primary-500) 0%, var(--primary-600) 100%);
+        border: none;
+    }
+
+    .help-info {
+        margin: 0;
+        color: var(--cloud-500);
+        font-size: 0.85rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.5rem;
+    }
+
+    /* Details Grid */
+    .profile-details-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 2.5rem;
+    }
+
+    /* Info Sections */
+    .info-section {
+        margin-bottom: 2rem;
+    }
+
+    .info-section h3 {
+        margin: 0 0 1.5rem 0;
+        color: var(--cloud-900);
+        font-size: 1.3rem;
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+    }
+
+    .info-list {
+        display: flex;
+        flex-direction: column;
+        gap: 1.25rem;
+    }
+
+    .info-item {
+        display: flex;
+        align-items: flex-start;
+        gap: 1rem;
+        padding: 1rem;
+        background: var(--cloud-50);
+        border-radius: var(--radius);
+        border: 1px solid var(--cloud-200);
+        transition: all var(--transition);
+    }
+
+    .info-item:hover {
+        background: white;
+        border-color: var(--primary-300);
+        transform: translateY(-2px);
+        box-shadow: var(--shadow);
+    }
+
+    .info-icon {
+        width: 44px;
+        height: 44px;
+        background: linear-gradient(135deg, var(--primary-400) 0%, var(--primary-500) 100%);
+        border-radius: var(--radius);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-size: 1.1rem;
+        flex-shrink: 0;
+    }
+
+    .info-content {
+        flex: 1;
+    }
+
+    .info-label {
+        display: block;
+        color: var(--cloud-600);
+        font-size: 0.85rem;
+        margin-bottom: 0.25rem;
+    }
+
+    .info-value {
+        display: block;
+        color: var(--cloud-800);
+        font-weight: 500;
+        font-size: 1rem;
+    }
+
+    /* About Section */
+    .about-section {
+        background: white;
+        border-radius: var(--radius-xl);
+        padding: 1.75rem;
+        margin-bottom: 2rem;
+        border: 1px solid var(--cloud-200);
+        box-shadow: var(--shadow-sm);
+    }
+
+    .about-section h3 {
+        margin: 0 0 1rem 0;
+        color: var(--cloud-900);
+        font-size: 1.3rem;
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+    }
+
+    .about-content {
+        color: var(--cloud-700);
+        line-height: 1.6;
+        font-size: 0.95rem;
+    }
+
+    /* Skills Section */
+    .skills-section {
+        background: white;
+        border-radius: var(--radius-xl);
+        padding: 1.75rem;
+        border: 1px solid var(--cloud-200);
+        box-shadow: var(--shadow-sm);
+    }
+
+    .skills-section h3 {
+        margin: 0 0 1.5rem 0;
+        color: var(--cloud-900);
+        font-size: 1.3rem;
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+    }
+
+    .skills-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+        gap: 1rem;
+    }
+
+    .skill-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 1rem;
+        background: var(--cloud-50);
+        border-radius: var(--radius);
+        border: 1px solid var(--cloud-200);
+        transition: all var(--transition);
+    }
+
+    .skill-item:hover {
+        background: white;
+        border-color: var(--primary-300);
+        transform: translateY(-2px);
+        box-shadow: var(--shadow);
+    }
+
+    .skill-name {
+        color: var(--cloud-800);
+        font-weight: 500;
+        font-size: 0.95rem;
+    }
+
+    .skill-level {
+        padding: 0.375rem 0.75rem;
+        border-radius: 20px;
+        font-size: 0.8rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    .skill-level.level-débutant {
+        background: linear-gradient(135deg, #93c5fd 0%, #60a5fa 100%);
+        color: #1e3a8a;
+    }
+
+    .skill-level.level-intermediaire {
+        background: linear-gradient(135deg, #a7f3d0 0%, #6ee7b7 100%);
+        color: #064e3b;
+    }
+
+    .skill-level.level-avancé {
+        background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
+        color: #78350f;
+    }
+
+    .skill-level.level-expert {
+        background: linear-gradient(135deg, #f87171 0%, #ef4444 100%);
+        color: #7f1d1d;
+    }
+
+    .empty-skills {
+        text-align: center;
+        padding: 2rem;
+        color: var(--cloud-500);
+    }
+
+    .empty-skills i {
+        font-size: 2.5rem;
+        margin-bottom: 1rem;
+        opacity: 0.5;
+    }
+
+    .empty-skills p {
+        margin: 0;
+        font-size: 0.95rem;
+    }
+
+    /* Publications Section - Liste verticale */
+    .publications-section {
+        margin-top: 3rem;
+    }
+
+    .section-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 2rem;
+        padding-bottom: 1rem;
+        border-bottom: 1px solid var(--cloud-200);
+    }
+
+    .section-header h2 {
+        margin: 0;
+        color: var(--cloud-900);
+        font-size: 1.8rem;
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+    }
+
+    .section-count {
+        background: var(--cloud-100);
+        color: var(--cloud-700);
+        padding: 0.5rem 1rem;
+        border-radius: var(--radius);
+        font-size: 0.9rem;
+        font-weight: 500;
+    }
+
+    /* Liste verticale des publications */
+    .publications-list {
+        display: flex;
+        flex-direction: column;
+        gap: 1.5rem;
+    }
+
+    .publication-list-item {
+        background: white;
+        border-radius: var(--radius-xl);
+        box-shadow: var(--shadow);
+        border: 1px solid var(--cloud-200);
+        transition: all var(--transition);
+        overflow: hidden;
+    }
+
+    .publication-list-item:hover {
+        border-color: var(--primary-300);
+        box-shadow: var(--shadow-lg);
+    }
+
+    .publication-list-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 1.25rem 1.75rem;
+        background: var(--cloud-50);
+        border-bottom: 1px solid var(--cloud-200);
+    }
+
+    .publication-type {
+        padding: 0.5rem 1rem;
+        border-radius: var(--radius);
+        font-size: 0.85rem;
+        font-weight: 600;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .publication-type.type-offre {
+        background: linear-gradient(135deg, rgba(16, 185, 129, 0.1) 0%, rgba(16, 185, 129, 0.05) 100%);
+        color: var(--accent-emerald);
+        border: 1px solid rgba(16, 185, 129, 0.2);
+    }
+
+    .publication-type.type-demande {
+        background: linear-gradient(135deg, rgba(59, 130, 246, 0.1) 0%, rgba(59, 130, 246, 0.05) 100%);
+        color: var(--primary-600);
+        border: 1px solid rgba(59, 130, 246, 0.2);
+    }
+
+    .publication-type.type-annonce {
+        background: linear-gradient(135deg, rgba(99, 102, 241, 0.1) 0%, rgba(99, 102, 241, 0.05) 100%);
+        color: var(--accent-indigo);
+        border: 1px solid rgba(99, 102, 241, 0.2);
+    }
+
+    .publication-actions {
+        display: flex;
+        gap: 0.5rem;
+    }
+
+    .action-btn {
+        width: 36px;
+        height: 36px;
+        border-radius: var(--radius);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border: none;
+        cursor: pointer;
+        font-size: 0.9rem;
+        transition: all var(--transition);
+    }
+
+    .edit-btn {
+        background: rgba(59, 130, 246, 0.1);
+        color: var(--primary-600);
+    }
+
+    .edit-btn:hover {
+        background: var(--primary-500);
+        color: white;
+    }
+
+    .delete-btn {
+        background: rgba(239, 68, 68, 0.1);
+        color: var(--accent-rose);
+    }
+
+    .delete-btn:hover {
+        background: var(--accent-rose);
+        color: white;
+    }
+
+    .publication-list-content {
+        padding: 1.75rem;
+    }
+
+    .publication-title {
+        margin: 0 0 1rem 0;
+        color: var(--cloud-900);
+        font-size: 1.3rem;
+        line-height: 1.4;
+    }
+
+    .publication-text {
+        margin-bottom: 1.5rem;
+    }
+
+    .publication-text p {
+        margin: 0;
+        color: var(--cloud-700);
+        line-height: 1.6;
+        font-size: 1rem;
+        white-space: pre-wrap;
+        word-wrap: break-word;
+    }
+
+    .publication-tags {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+        margin-bottom: 1.5rem;
+    }
+
+    .tag {
+        background: var(--cloud-100);
+        color: var(--cloud-700);
+        padding: 0.375rem 0.75rem;
+        border-radius: 20px;
+        font-size: 0.85rem;
+        font-weight: 500;
+    }
+
+    .publication-list-footer {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding-top: 1.25rem;
+        border-top: 1px solid var(--cloud-200);
+    }
+
+    .publication-date {
+        color: var(--cloud-500);
+        font-size: 0.9rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .contact-btn {
+        padding: 0.5rem 1rem;
+        font-size: 0.85rem;
+    }
+
+    /* Empty State */
+    .empty-publications {
+        text-align: center;
+        padding: 4rem 2rem;
+        background: var(--cloud-50);
+        border-radius: var(--radius-xl);
+        border: 2px dashed var(--cloud-300);
+    }
+
+    .empty-icon {
+        width: 80px;
+        height: 80px;
+        background: var(--cloud-200);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 1.5rem;
+        color: var(--cloud-500);
+        font-size: 2.5rem;
+    }
+
+    .empty-publications h4 {
+        margin: 0 0 1rem 0;
+        color: var(--cloud-700);
+        font-size: 1.3rem;
+    }
+
+    .empty-publications p {
+        margin: 0;
+        color: var(--cloud-600);
+        max-width: 400px;
+        margin-left: auto;
+        margin-right: auto;
+    }
+
+    /* Responsive */
+    @media (max-width: 1024px) {
+        .profile-header-section {
+            flex-direction: column;
+            gap: 2rem;
+        }
+
+        .profile-info-left {
+            flex-direction: column;
+            text-align: center;
+            gap: 1.5rem;
+        }
+
+        .profile-avatar-large {
+            margin: 0 auto;
+        }
+
+        .profile-meta {
+            justify-content: center;
+        }
+
+        .reputation-card {
+            width: 100%;
+        }
+
+        .profile-details-grid {
+            grid-template-columns: 1fr;
+            gap: 2rem;
+        }
+    }
+
+    @media (max-width: 768px) {
+        .profile-header-info h1 {
+            font-size: 1.8rem;
+        }
+
+        .profile-card-content {
+            padding: 1.5rem;
+        }
+
+        .score-stats {
+            grid-template-columns: repeat(3, 1fr);
+        }
+
+        .skills-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .section-header {
+            flex-direction: column;
+            gap: 1rem;
+            text-align: center;
+        }
+
+        .publication-list-footer {
+            flex-direction: column;
+            gap: 1rem;
+            align-items: flex-start;
+        }
+
+        .contact-btn {
+            width: 100%;
+        }
+
+        .publication-list-header {
+            flex-direction: column;
+            gap: 1rem;
+            align-items: flex-start;
+        }
+
+        .publication-actions {
+            align-self: flex-start;
+        }
+    }
+
+    @media (max-width: 480px) {
+        .score-stats {
+            grid-template-columns: 1fr;
+        }
+
+        .profile-avatar-large {
+            width: 120px;
+            height: 120px;
+            font-size: 2.5rem;
+        }
+
+        .publication-list-content {
+            padding: 1.25rem;
+        }
+    }
+</style>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Animate elements on scroll
+        const observerOptions = {
+            threshold: 0.1,
+            rootMargin: '0px 0px -50px 0px'
+        };
+
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.style.opacity = '1';
+                    entry.target.style.transform = 'translateY(0)';
+                }
+            });
+        }, observerOptions);
+
+        // Observe skill items
+        const skillItems = document.querySelectorAll('.skill-item');
+        skillItems.forEach((item, index) => {
+            item.style.opacity = '0';
+            item.style.transform = 'translateY(20px)';
+            item.style.transition = 'all 0.5s ease';
+            observer.observe(item);
+            
+            // Stagger animation
+            item.style.transitionDelay = (index * 0.1) + 's';
+        });
+
+        // Observe publication items
+        const publicationItems = document.querySelectorAll('.publication-list-item');
+        publicationItems.forEach((item, index) => {
+            item.style.opacity = '0';
+            item.style.transform = 'translateY(20px)';
+            item.style.transition = 'all 0.5s ease';
+            observer.observe(item);
+            
+            // Stagger animation
+            item.style.transitionDelay = (index * 0.1) + 's';
+        });
+
+        // Hover effects for profile elements
+        const infoItems = document.querySelectorAll('.info-item');
+        infoItems.forEach(item => {
+            item.addEventListener('mouseenter', function() {
+                const icon = this.querySelector('.info-icon');
+                if (icon) {
+                    icon.style.transform = 'scale(1.1)';
+                    icon.style.transition = 'transform 0.3s ease';
+                }
+            });
+
+            item.addEventListener('mouseleave', function() {
+                const icon = this.querySelector('.info-icon');
+                if (icon) {
+                    icon.style.transform = 'scale(1)';
+                }
+            });
+        });
+
+        // Copy email functionality
+        const emailElement = document.querySelector('.info-item:first-child .info-value');
+        if (emailElement) {
+            emailElement.style.cursor = 'pointer';
+            emailElement.title = 'Cliquer pour copier';
+            
+            emailElement.addEventListener('click', function() {
+                const email = this.textContent;
+                navigator.clipboard.writeText(email).then(() => {
+                    // Show copied notification
+                    const originalText = this.textContent;
+                    this.textContent = 'Copié !';
+                    this.style.color = 'var(--accent-emerald)';
+                    
+                    setTimeout(() => {
+                        this.textContent = originalText;
+                        this.style.color = '';
+                    }, 2000);
+                });
+            });
+        }
+
+        // Request help button confirmation
+        const requestHelpBtn = document.querySelector('.request-help-btn');
+        if (requestHelpBtn) {
+            requestHelpBtn.addEventListener('click', function(e) {
+                if (!confirm('Êtes-vous sûr de vouloir demander de l\'aide à cet utilisateur ?')) {
+                    e.preventDefault();
+                }
+            });
+        }
+
+        // Update publication count in real-time
+        function updatePublicationCount() {
+            const count = publicationItems.length;
+            const countElement = document.querySelector('.section-count');
+            if (countElement) {
+                countElement.textContent = count + ' publication(s)';
+            }
+        }
+
+        // Initial count update
+        updatePublicationCount();
+
+        // Animate reputation card on hover
+        const reputationCard = document.querySelector('.reputation-card');
+        if (reputationCard) {
+            reputationCard.addEventListener('mouseenter', function() {
+                this.style.transform = 'translateY(-5px)';
+                this.style.transition = 'transform 0.3s ease';
+            });
+
+            reputationCard.addEventListener('mouseleave', function() {
+                this.style.transform = 'translateY(0)';
+            });
+        }
+
+        // Expand/collapse long text (optionnel)
+        const publicationTexts = document.querySelectorAll('.publication-text p');
+        publicationTexts.forEach(text => {
+            if (text.textContent.length > 500) {
+                const originalText = text.textContent;
+                const truncatedText = originalText.substring(0, 500) + '...';
+                text.textContent = truncatedText;
+                
+                const readMoreBtn = document.createElement('button');
+                readMoreBtn.className = 'btn-read-more';
+                readMoreBtn.innerHTML = '<i class="fas fa-chevron-down"></i> Lire la suite';
+                readMoreBtn.style.cssText = `
+                    background: none;
+                    border: none;
+                    color: var(--primary-600);
+                    cursor: pointer;
+                    font-size: 0.9rem;
+                    font-weight: 600;
+                    display: flex;
+                    align-items: center;
+                    gap: 0.5rem;
+                    margin-top: 0.5rem;
+                    padding: 0.5rem 0;
+                `;
+                
+                readMoreBtn.addEventListener('click', function() {
+                    if (text.textContent.length < originalText.length) {
+                        text.textContent = originalText;
+                        readMoreBtn.innerHTML = '<i class="fas fa-chevron-up"></i> Réduire';
+                    } else {
+                        text.textContent = truncatedText;
+                        readMoreBtn.innerHTML = '<i class="fas fa-chevron-down"></i> Lire la suite';
+                    }
+                });
+                
+                text.parentNode.appendChild(readMoreBtn);
+            }
+        });
+    });
+</script>
+{% endblock %}

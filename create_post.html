@@ -1,0 +1,392 @@
+{% extends "base.html" %}
+
+{% block title %}Créer une publication - SkillUp{% endblock %}
+
+{% block content %}
+<div class="fade-in">
+    <div class="create-post-container" style="max-width: 800px; margin: 0 auto;">
+        <div class="create-post-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2.5rem;">
+            <h1 class="text-gradient" style="margin: 0;">
+                <i class="fas fa-edit" style="margin-right: 0.75rem;"></i>
+                Créer une publication
+            </h1>
+            <a href="{{ url_for('index') }}" class="btn btn-secondary" style="border-radius: var(--radius-lg);">
+                ← Retour à l'accueil
+            </a>
+        </div>
+        
+        <div class="card" style="background: white; border: none; box-shadow: var(--shadow-xl); overflow: hidden;">
+            <!-- Top colored bar -->
+            <div style="height: 6px; width: 100%; background: linear-gradient(90deg, var(--primary-500) 0%, var(--accent-indigo) 100%);"></div>
+            
+            <div style="padding: 2.5rem;">
+                <form method="POST" id="createPostForm">
+                    <!-- Publication Type -->
+                    <div class="form-section" style="margin-bottom: 2.5rem;">
+                        <label style="display: block; margin-bottom: 1rem; font-weight: 600; color: var(--cloud-800); font-size: 1.1rem;">
+                            <i class="fas fa-tag" style="color: var(--primary-500); margin-right: 0.5rem;"></i>
+                            Type de publication *
+                        </label>
+                        
+                        <div class="type-options" style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; margin-bottom: 1rem;">
+                            {% set type_options = [
+                                {'value': 'offre', 'icon': 'fas fa-hand-holding-heart', 'label': 'Offre', 'desc': 'Je propose mon aide', 'color': 'var(--accent-emerald)'},
+                                {'value': 'demande', 'icon': 'fas fa-question-circle', 'label': 'Demande', 'desc': 'Je cherche de l\'aide', 'color': 'var(--primary-500)'},
+                                {'value': 'annonce', 'icon': 'fas fa-bullhorn', 'label': 'Annonce', 'desc': 'Annonce générale', 'color': 'var(--accent-indigo)'}
+                            ] %}
+                            
+                            {% for option in type_options %}
+                                <label class="type-option" 
+                                       style="display: flex; flex-direction: column; align-items: center; padding: 1.5rem; 
+                                              background: white; border: 2px solid var(--cloud-200); border-radius: var(--radius-lg); 
+                                              cursor: pointer; transition: all var(--transition); text-align: center;">
+                                    <input type="radio" name="type_publication" value="{{ option.value }}" 
+                                           required style="display: none;"
+                                           {% if loop.first %}checked{% endif %}>
+                                    <div class="type-icon" 
+                                         style="width: 60px; height: 60px; background: linear-gradient(135deg, {{ option.color }} 0%, 
+                                                {% if option.value == 'offre' %}var(--accent-teal){% elif option.value == 'demande' %}var(--primary-600){% else %}var(--accent-indigo){% endif %} 100%); 
+                                                border-radius: 50%; display: flex; align-items: center; justify-content: center; 
+                                                color: white; font-size: 1.5rem; margin-bottom: 1rem;">
+                                        <i class="{{ option.icon }}"></i>
+                                    </div>
+                                    <h3 style="margin: 0 0 0.5rem 0; color: var(--cloud-800);">{{ option.label }}</h3>
+                                    <p style="margin: 0; color: var(--cloud-600); font-size: 0.9rem;">{{ option.desc }}</p>
+                                </label>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    
+                    <!-- Title -->
+                    <div class="form-group" style="margin-bottom: 2rem;">
+                        <label for="titre" style="display: block; margin-bottom: 1rem; font-weight: 600; color: var(--cloud-800); font-size: 1.1rem;">
+                            <i class="fas fa-heading" style="color: var(--primary-500); margin-right: 0.5rem;"></i>
+                            Titre *
+                        </label>
+                        <input type="text" id="titre" name="titre" class="form-control" 
+                               placeholder="Ex: Aide en Excel pour projet financier" required
+                               style="width: 100%; padding: 1rem 1.25rem; border: 1px solid var(--cloud-300); border-radius: var(--radius); 
+                                      font-size: 1.1rem; transition: all var(--transition);"
+                               onfocus="this.style.borderColor = 'var(--primary-400)'; this.style.boxShadow = '0 0 0 3px rgba(59, 130, 246, 0.1)';"
+                               onblur="this.style.borderColor = 'var(--cloud-300)'; this.style.boxShadow = 'none';">
+                        <small style="display: block; margin-top: 0.5rem; color: var(--cloud-500);">
+                            Donnez un titre clair et descriptif pour attirer l'attention
+                        </small>
+                    </div>
+                    
+                    <!-- Content -->
+                    <div class="form-group" style="margin-bottom: 2rem;">
+                        <label for="contenu" style="display: block; margin-bottom: 1rem; font-weight: 600; color: var(--cloud-800); font-size: 1.1rem;">
+                            <i class="fas fa-align-left" style="color: var(--primary-500); margin-right: 0.5rem;"></i>
+                            Description détaillée *
+                        </label>
+                        <textarea id="contenu" name="contenu" class="form-control" rows="8" 
+                                  placeholder="Décrivez en détail ce que vous proposez ou cherchez. Soyez précis !" required
+                                  style="width: 100%; padding: 1rem 1.25rem; border: 1px solid var(--cloud-300); border-radius: var(--radius); 
+                                         font-size: 1rem; resize: vertical; min-height: 200px; line-height: 1.6;"
+                                  onfocus="this.style.borderColor = 'var(--primary-400)'; this.style.boxShadow = '0 0 0 3px rgba(59, 130, 246, 0.1)';"
+                                  onblur="this.style.borderColor = 'var(--cloud-300)'; this.style.boxShadow = 'none';"></textarea>
+                        <div style="display: flex; justify-content: space-between; margin-top: 0.5rem;">
+                            <small style="color: var(--cloud-500);">
+                                Plus vous serez précis, plus vous aurez de chances de trouver la bonne personne
+                            </small>
+                            <small id="charCount" style="color: var(--cloud-500); font-weight: 500;">0 caractères</small>
+                        </div>
+                    </div>
+                    
+                    <!-- Category & Tags -->
+                    <div style="display: grid; grid-template-columns: 1fr 2fr; gap: 2rem; margin-bottom: 2.5rem;">
+                        <!-- Category -->
+                        <div class="form-group">
+                            <label for="categorie" style="display: block; margin-bottom: 1rem; font-weight: 600; color: var(--cloud-800); font-size: 1.1rem;">
+                                <i class="fas fa-folder" style="color: var(--primary-500); margin-right: 0.5rem;"></i>
+                                Catégorie
+                            </label>
+                            <select id="categorie" name="categorie" class="form-control"
+                                    style="width: 100%; padding: 0.875rem 1rem; border: 1px solid var(--cloud-300); border-radius: var(--radius); 
+                                           font-size: 1rem; background: white; cursor: pointer;"
+                                    onfocus="this.style.borderColor = 'var(--primary-400)'; this.style.boxShadow = '0 0 0 3px rgba(59, 130, 246, 0.1)';"
+                                    onblur="this.style.borderColor = 'var(--cloud-300)'; this.style.boxShadow = 'none';">
+                                <option value="">-- Choisir une catégorie --</option>
+                                {% set categories = [
+                                    {'value': 'informatique', 'label': '💻 Informatique'},
+                                    {'value': 'bureautique', 'label': '📊 Bureautique'},
+                                    {'value': 'langues', 'label': '🌍 Langues'},
+                                    {'value': 'design', 'label': '🎨 Design'},
+                                    {'value': 'marketing', 'label': '📈 Marketing'},
+                                    {'value': 'gestion', 'label': '📋 Gestion'},
+                                    {'value': 'autres', 'label': '🔧 Autres'}
+                                ] %}
+                                {% for cat in categories %}
+                                    <option value="{{ cat.value }}">{{ cat.label }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        
+                        <!-- Tags -->
+                        <div class="form-group">
+                            <label for="tags" style="display: block; margin-bottom: 1rem; font-weight: 600; color: var(--cloud-800); font-size: 1.1rem;">
+                                <i class="fas fa-tags" style="color: var(--primary-500); margin-right: 0.5rem;"></i>
+                                Tags (optionnel)
+                            </label>
+                            <input type="text" id="tags" name="tags" class="form-control" 
+                                   placeholder="Excel, Finance, Tableaux, Graphiques..."
+                                   style="width: 100%; padding: 0.875rem 1rem; border: 1px solid var(--cloud-300); border-radius: var(--radius); 
+                                          font-size: 1rem;"
+                                   onfocus="this.style.borderColor = 'var(--primary-400)'; this.style.boxShadow = '0 0 0 3px rgba(59, 130, 246, 0.1)';"
+                                   onblur="this.style.borderColor = 'var(--cloud-300)'; this.style.boxShadow = 'none';">
+                            <small style="display: block; margin-top: 0.5rem; color: var(--cloud-500);">
+                                Ajoutez des mots-clés séparés par des virgules pour faciliter la recherche
+                            </small>
+                            <div id="tagsPreview" style="display: flex; flex-wrap: wrap; gap: 0.5rem; margin-top: 1rem;"></div>
+                        </div>
+                    </div>
+                    
+                    <!-- Tips -->
+                    <div class="tips-card" style="background: linear-gradient(135deg, rgba(59, 130, 246, 0.05) 0%, rgba(99, 102, 241, 0.05) 100%); 
+                                                    padding: 1.5rem; border-radius: var(--radius-lg); margin-bottom: 2.5rem; 
+                                                    border: 1px solid rgba(59, 130, 246, 0.1);">
+                        <div style="display: flex; align-items: flex-start; gap: 1rem;">
+                            <div style="flex-shrink: 0;">
+                                <i class="fas fa-lightbulb" style="color: var(--primary-500); font-size: 1.8rem;"></i>
+                            </div>
+                            <div>
+                                <h4 style="margin: 0 0 0.75rem 0; color: var(--cloud-800);">
+                                    💡 Conseils pour une bonne publication
+                                </h4>
+                                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem;">
+                                    <div style="padding: 0.75rem; background: white; border-radius: var(--radius); border: 1px solid var(--cloud-200);">
+                                        <strong style="color: var(--primary-600);">Soyez précis</strong>
+                                        <p style="margin: 0.5rem 0 0 0; font-size: 0.9rem; color: var(--cloud-600);">
+                                            Décrivez exactement ce que vous cherchez ou proposez
+                                        </p>
+                                    </div>
+                                    <div style="padding: 0.75rem; background: white; border-radius: var(--radius); border: 1px solid var(--cloud-200);">
+                                        <strong style="color: var(--primary-600);">Indiquez la durée</strong>
+                                        <p style="margin: 0.5rem 0 0 0; font-size: 0.9rem; color: var(--cloud-600);">
+                                            Estimez le temps nécessaire pour l'aide
+                                        </p>
+                                    </div>
+                                    <div style="padding: 0.75rem; background: white; border-radius: var(--radius); border: 1px solid var(--cloud-200);">
+                                        <strong style="color: var(--primary-600);">Ajoutez des tags</strong>
+                                        <p style="margin: 0.5rem 0 0 0; font-size: 0.9rem; color: var(--cloud-600);">
+                                            Utilisez des mots-clés pertinents
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Actions -->
+                    <div class="form-actions" style="display: flex; gap: 1rem; margin-top: 2rem; padding-top: 2rem; border-top: 1px solid var(--cloud-200);">
+                        <button type="submit" class="btn btn-primary" 
+                                style="flex: 1; padding: 1rem 2rem; font-size: 1.1rem; font-weight: 600; border-radius: var(--radius-lg);
+                                       background: linear-gradient(135deg, var(--primary-500) 0%, var(--primary-600) 100%);">
+                            <i class="fas fa-paper-plane" style="margin-right: 0.5rem;"></i>
+                            Publier
+                        </button>
+                        <a href="{{ url_for('index') }}" class="btn btn-secondary" 
+                           style="flex: 1; padding: 1rem 2rem; font-size: 1.1rem; font-weight: 600; border-radius: var(--radius-lg);">
+                            <i class="fas fa-times" style="margin-right: 0.5rem;"></i>
+                            Annuler
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    /* Type option hover/active effects */
+    .type-option:hover {
+        transform: translateY(-5px);
+        box-shadow: var(--shadow-lg);
+        border-color: var(--primary-300);
+    }
+    
+    .type-option input:checked + .type-icon {
+        animation: pulse 0.5s ease;
+    }
+    
+    .type-option input:checked ~ h3 {
+        color: var(--primary-600);
+    }
+    
+    .type-option input:checked ~ p {
+        color: var(--primary-500);
+    }
+    
+    @keyframes pulse {
+        0% { transform: scale(1); }
+        50% { transform: scale(1.1); }
+        100% { transform: scale(1); }
+    }
+    
+    /* Tag preview */
+    .tag-preview {
+        background: linear-gradient(135deg, var(--primary-100) 0%, var(--primary-50) 100%);
+        color: var(--primary-700);
+        padding: 0.5rem 0.875rem;
+        border-radius: 20px;
+        font-size: 0.9rem;
+        font-weight: 500;
+        border: 1px solid var(--primary-200);
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+    
+    .tag-preview .remove-tag {
+        cursor: pointer;
+        opacity: 0.6;
+        transition: opacity 0.2s;
+    }
+    
+    .tag-preview .remove-tag:hover {
+        opacity: 1;
+    }
+    
+    /* Responsive */
+    @media (max-width: 768px) {
+        .create-post-header {
+            flex-direction: column;
+            gap: 1rem;
+            text-align: center;
+        }
+        
+        .type-options {
+            grid-template-columns: 1fr;
+        }
+        
+        .form-actions {
+            flex-direction: column;
+        }
+        
+        .form-actions .btn {
+            width: 100%;
+        }
+        
+        .grid-cols-2 {
+            grid-template-columns: 1fr;
+            gap: 1.5rem;
+        }
+    }
+</style>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const form = document.getElementById('createPostForm');
+        const contentTextarea = document.getElementById('contenu');
+        const charCount = document.getElementById('charCount');
+        const tagsInput = document.getElementById('tags');
+        const tagsPreview = document.getElementById('tagsPreview');
+        
+        // Character count for content
+        contentTextarea.addEventListener('input', function() {
+            const length = this.value.length;
+            charCount.textContent = length + ' caractères';
+            
+            // Color coding
+            if (length < 50) {
+                charCount.style.color = 'var(--accent-rose)';
+            } else if (length < 150) {
+                charCount.style.color = 'var(--accent-amber)';
+            } else {
+                charCount.style.color = 'var(--accent-emerald)';
+            }
+        });
+        
+        // Tags preview
+        function updateTagsPreview() {
+            const tags = tagsInput.value.split(',').map(tag => tag.trim()).filter(tag => tag);
+            tagsPreview.innerHTML = '';
+            
+            tags.forEach(tag => {
+                if (tag) {
+                    const tagElement = document.createElement('span');
+                    tagElement.className = 'tag-preview';
+                    tagElement.innerHTML = `
+                        #${tag}
+                        <span class="remove-tag" onclick="removeTag('${tag}')">×</span>
+                    `;
+                    tagsPreview.appendChild(tagElement);
+                }
+            });
+        }
+        
+        window.removeTag = function(tagToRemove) {
+            const tags = tagsInput.value.split(',').map(tag => tag.trim()).filter(tag => tag && tag !== tagToRemove);
+            tagsInput.value = tags.join(', ');
+            updateTagsPreview();
+        };
+        
+        tagsInput.addEventListener('input', updateTagsPreview);
+        tagsInput.addEventListener('blur', function() {
+            // Clean up tags (remove duplicates, extra spaces)
+            const tags = this.value.split(',').map(tag => tag.trim()).filter(tag => tag);
+            const uniqueTags = [...new Set(tags)];
+            this.value = uniqueTags.join(', ');
+            updateTagsPreview();
+        });
+        
+        // Form validation
+        form.addEventListener('submit', function(e) {
+            const title = document.getElementById('titre').value.trim();
+            const content = contentTextarea.value.trim();
+            
+            if (title.length < 5) {
+                e.preventDefault();
+                alert('Le titre doit contenir au moins 5 caractères.');
+                return false;
+            }
+            
+            if (content.length < 20) {
+                e.preventDefault();
+                alert('La description doit contenir au moins 20 caractères.');
+                return false;
+            }
+            
+            // Add loading state
+            const submitBtn = this.querySelector('button[type="submit"]');
+            const originalHTML = submitBtn.innerHTML;
+            submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Publication en cours...';
+            submitBtn.disabled = true;
+            
+            return true;
+        });
+        
+        // Auto-select type option
+        const typeOptions = document.querySelectorAll('.type-option');
+        typeOptions.forEach(option => {
+            option.addEventListener('click', function() {
+                const input = this.querySelector('input');
+                input.checked = true;
+                
+                // Update visual state
+                typeOptions.forEach(opt => {
+                    opt.style.borderColor = 'var(--cloud-200)';
+                    opt.style.boxShadow = 'none';
+                });
+                
+                this.style.borderColor = 'var(--primary-400)';
+                this.style.boxShadow = 'var(--shadow-blue)';
+                
+                // Animate icon
+                const icon = this.querySelector('.type-icon');
+                icon.style.transform = 'scale(1.1)';
+                setTimeout(() => {
+                    icon.style.transform = 'scale(1)';
+                }, 200);
+            });
+        });
+        
+        // Initialize first type option as selected
+        typeOptions[0].click();
+        
+        // Auto-focus title field
+        document.getElementById('titre').focus();
+    });
+</script>
+{% endblock %}

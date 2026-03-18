@@ -1,0 +1,217 @@
+{% extends "base.html" %}
+
+{% block title %}Confirmer l'aide - SkillUp{% endblock %}
+
+{% block content %}
+<div class="fade-in">
+    <div class="confirm-help-container" style="max-width: 800px; margin: 0 auto;">
+        <div class="confirm-help-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2.5rem;">
+            <h1 class="text-gradient" style="margin: 0;">⭐ Confirmer l'aide reçue</h1>
+            <a href="{{ url_for('my_helps') }}" class="btn btn-secondary" style="border-radius: var(--radius-lg);">
+                ← Retour aux aides
+            </a>
+        </div>
+        
+        <div class="card" style="background: white; border: none; box-shadow: var(--shadow-xl); overflow: hidden;">
+            <!-- Top colored bar -->
+            <div style="height: 6px; width: 100%; background: linear-gradient(90deg, var(--primary-500) 0%, var(--accent-emerald) 100%);"></div>
+            
+            <div style="padding: 2.5rem;">
+                <!-- Help Info -->
+                <div class="help-info" style="background: linear-gradient(135deg, var(--cloud-50) 0%, var(--cloud-100) 100%); padding: 2rem; border-radius: var(--radius-lg); margin-bottom: 2.5rem; border: 1px solid var(--cloud-200);">
+                    <div style="display: flex; align-items: center; gap: 1rem; margin-bottom: 1.5rem;">
+                        <div style="width: 60px; height: 60px; background: linear-gradient(135deg, var(--primary-400) 0%, var(--primary-500) 100%); border-radius: var(--radius); display: flex; align-items: center; justify-content: center; color: white;">
+                            <i class="fas fa-hands-helping" style="font-size: 1.8rem;"></i>
+                        </div>
+                        <div>
+                            <h3 style="margin: 0; color: var(--cloud-900);">Aide #{{ transaction.id }}</h3>
+                            <small style="color: var(--cloud-500);">Demandée le {{ transaction.requested_at.strftime('%d/%m/%Y') }}</small>
+                        </div>
+                    </div>
+                    
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1.5rem;">
+                        <div>
+                            <label style="display: block; color: var(--cloud-600); font-size: 0.875rem; margin-bottom: 0.5rem; font-weight: 500;">Compétence</label>
+                            <div style="background: white; padding: 0.75rem 1rem; border-radius: var(--radius-sm); border: 1px solid var(--cloud-200); font-weight: 500; color: var(--cloud-800);">
+                                {{ transaction.skill }}
+                            </div>
+                        </div>
+                        
+                        <div>
+                            <label style="display: block; color: var(--cloud-600); font-size: 0.875rem; margin-bottom: 0.5rem; font-weight: 500;">Aidant</label>
+                            <div style="background: white; padding: 0.75rem 1rem; border-radius: var(--radius-sm); border: 1px solid var(--cloud-200); font-weight: 500; color: var(--cloud-800);">
+                                {{ transaction.prenom }} {{ transaction.nom }}
+                            </div>
+                        </div>
+                        
+                        <div>
+                            <label style="display: block; color: var(--cloud-600); font-size: 0.875rem; margin-bottom: 0.5rem; font-weight: 500;">Terminée le</label>
+                            <div style="background: white; padding: 0.75rem 1rem; border-radius: var(--radius-sm); border: 1px solid var(--cloud-200); font-weight: 500; color: var(--cloud-800);">
+                                {{ transaction.completed_at.strftime('%d/%m/%Y %H:%M') }}
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div style="margin-top: 1.5rem;">
+                        <label style="display: block; color: var(--cloud-600); font-size: 0.875rem; margin-bottom: 0.5rem; font-weight: 500;">Description</label>
+                        <div style="background: white; padding: 1rem; border-radius: var(--radius-sm); border: 1px solid var(--cloud-200); color: var(--cloud-700); line-height: 1.6;">
+                            {{ transaction.description }}
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Form -->
+                <form method="POST">
+                    <!-- Rating -->
+                    <div class="form-group" style="margin-bottom: 2rem;">
+                        <label style="display: block; margin-bottom: 1rem; font-weight: 600; color: var(--cloud-800); font-size: 1.1rem;">
+                            <i class="fas fa-star" style="color: var(--accent-amber); margin-right: 0.5rem;"></i>
+                            Note (1-5 étoiles) *
+                        </label>
+                        
+                        <div class="star-rating" style="display: flex; gap: 0.5rem; margin-bottom: 0.5rem;">
+                            {% for i in range(5, 0, -1) %}
+                                <input type="radio" id="star{{ i }}" name="rating" value="{{ i }}" {% if i == 5 %}checked{% endif %} 
+                                       style="display: none;">
+                                <label for="star{{ i }}" title="{{ ['Mauvais', 'Passable', 'Bien', 'Très bien', 'Excellent'][i-1] }}"
+                                       style="cursor: pointer; font-size: 2.5rem; color: var(--cloud-300); transition: all var(--transition);">
+                                    ★
+                                </label>
+                            {% endfor %}
+                        </div>
+                        
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 0.5rem;">
+                            <small style="color: var(--cloud-500);">5 = Excellent, 1 = Mauvais</small>
+                            <div id="rating-description" style="font-weight: 500; color: var(--primary-600);">Excellent</div>
+                        </div>
+                    </div>
+                    
+                    <!-- Feedback -->
+                    <div class="form-group" style="margin-bottom: 2.5rem;">
+                        <label for="feedback" style="display: block; margin-bottom: 1rem; font-weight: 600; color: var(--cloud-800); font-size: 1.1rem;">
+                            <i class="fas fa-comment" style="color: var(--primary-500); margin-right: 0.5rem;"></i>
+                            Commentaire (optionnel)
+                        </label>
+                        <textarea id="feedback" name="feedback" class="form-control" rows="4" 
+                                  placeholder="Comment s'est passée l'aide ? Quelque chose à améliorer ?" 
+                                  style="border: 1px solid var(--cloud-300); border-radius: var(--radius); padding: 1rem; font-size: 1rem; resize: vertical;"
+                                  onfocus="this.style.borderColor = 'var(--primary-400)'; this.style.boxShadow = '0 0 0 3px rgba(59, 130, 246, 0.1)';"
+                                  onblur="this.style.borderColor = 'var(--cloud-300)'; this.style.boxShadow = 'none';"></textarea>
+                        <small style="display: block; margin-top: 0.5rem; color: var(--cloud-500);">
+                            Votre feedback aide à améliorer la communauté
+                        </small>
+                    </div>
+                    
+                    <!-- Points Info -->
+                    <div class="points-info" style="background: linear-gradient(135deg, rgba(59, 130, 246, 0.05) 0%, rgba(16, 185, 129, 0.05) 100%); 
+                                                      padding: 1.5rem; border-radius: var(--radius-lg); margin-bottom: 2.5rem; border: 1px solid var(--cloud-200);">
+                        <div style="display: flex; align-items: center; gap: 1rem; margin-bottom: 1rem;">
+                            <div style="width: 50px; height: 50px; background: linear-gradient(135deg, var(--accent-emerald) 0%, var(--accent-teal) 100%); 
+                                         border-radius: var(--radius); display: flex; align-items: center; justify-content: center; color: white;">
+                                <i class="fas fa-trophy" style="font-size: 1.5rem;"></i>
+                            </div>
+                            <div>
+                                <h4 style="margin: 0; color: var(--cloud-900);">🎯 Système de points</h4>
+                                <p style="margin: 0.5rem 0 0 0; color: var(--cloud-600);">Note × 10 points</p>
+                            </div>
+                        </div>
+                        
+                        <div style="display: grid; grid-template-columns: repeat(5, 1fr); gap: 0.75rem; text-align: center;">
+                            {% for i in range(1, 6) %}
+                                <div style="padding: 0.75rem; background: white; border-radius: var(--radius); border: 1px solid var(--cloud-200);">
+                                    <div style="font-size: 0.9rem; color: var(--cloud-600); margin-bottom: 0.25rem;">{{ i }}★</div>
+                                    <div style="font-weight: 700; color: var(--accent-emerald);">+{{ i * 10 }} pts</div>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    
+                    <!-- Actions -->
+                    <div class="form-actions" style="display: flex; gap: 1rem; margin-top: 2rem; padding-top: 2rem; border-top: 1px solid var(--cloud-200);">
+                        <button type="submit" class="btn btn-primary" 
+                                style="flex: 1; padding: 1rem 2rem; font-size: 1.1rem; font-weight: 600; border-radius: var(--radius-lg); 
+                                       background: linear-gradient(135deg, var(--accent-emerald) 0%, var(--accent-teal) 100%);">
+                            <i class="fas fa-check-circle" style="margin-right: 0.5rem;"></i>
+                            Confirmer et attribuer les points
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .star-rating label:hover,
+    .star-rating label:hover ~ label,
+    .star-rating input:checked ~ label {
+        color: var(--accent-amber) !important;
+        transform: scale(1.1);
+        filter: drop-shadow(0 0 8px rgba(245, 158, 11, 0.2));
+    }
+    
+    .points-info div div:hover {
+        transform: translateY(-3px);
+        box-shadow: var(--shadow);
+        border-color: var(--accent-emerald);
+        transition: all var(--transition);
+        cursor: default;
+    }
+</style>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const stars = document.querySelectorAll('.star-rating input');
+        const ratingDesc = document.getElementById('rating-description');
+        const descriptions = ['Mauvais', 'Passable', 'Bien', 'Très bien', 'Excellent'];
+        
+        stars.forEach(star => {
+            star.addEventListener('change', function() {
+                const rating = parseInt(this.value);
+                ratingDesc.textContent = descriptions[rating - 1];
+                
+                // Animation
+                ratingDesc.style.transform = 'scale(1.1)';
+                ratingDesc.style.color = 'var(--accent-amber)';
+                setTimeout(() => {
+                    ratingDesc.style.transform = 'scale(1)';
+                }, 200);
+            });
+            
+            // Hover effect
+            star.addEventListener('mouseenter', function() {
+                const hoverRating = parseInt(this.value);
+                ratingDesc.textContent = descriptions[hoverRating - 1] + ' (prévisualisation)';
+                ratingDesc.style.color = 'var(--primary-500)';
+            });
+            
+            star.addEventListener('mouseleave', function() {
+                const checked = document.querySelector('.star-rating input:checked');
+                if (checked) {
+                    const rating = parseInt(checked.value);
+                    ratingDesc.textContent = descriptions[rating - 1];
+                    ratingDesc.style.color = 'var(--primary-600)';
+                }
+            });
+        });
+        
+        // Form validation
+        const form = document.querySelector('form');
+        form.addEventListener('submit', function(e) {
+            const rating = document.querySelector('input[name="rating"]:checked');
+            if (!rating) {
+                e.preventDefault();
+                alert('Veuillez sélectionner une note.');
+                return false;
+            }
+            
+            // Add loading state
+            const submitBtn = this.querySelector('button[type="submit"]');
+            submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Confirmation...';
+            submitBtn.disabled = true;
+            
+            return true;
+        });
+    });
+</script>
+{% endblock %}

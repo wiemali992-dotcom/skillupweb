@@ -1,0 +1,525 @@
+{% extends "base.html" %}
+
+{% block title %}Modifier mon profil - SkillUp{% endblock %}
+
+{% block content %}
+<div class="fade-in">
+    <div class="edit-profile-container">
+        <div class="edit-profile-header">
+            <h1 class="text-gradient">
+                <i class="fas fa-edit header-icon"></i>
+                Modifier mon profil
+            </h1>
+            <a href="{{ url_for('myprofile') }}" class="btn btn-secondary">
+                ← Retour au profil
+            </a>
+        </div>
+        
+        <div class="edit-profile-card">
+            <!-- Top colored bar -->
+            <div class="card-top-bar"></div>
+            
+            <div class="edit-profile-content">
+                <form method="POST" id="editProfileForm">
+                    <!-- Informations de base -->
+                    <div class="form-section">
+                        <div class="section-header">
+                            <div class="section-icon">
+                                <i class="fas fa-user"></i>
+                            </div>
+                            <h3>Informations personnelles</h3>
+                        </div>
+                        
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="nom">Nom *</label>
+                                <input type="text" id="nom" name="nom" class="form-control" 
+                                       value="{{ user.nom }}" required>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="prenom">Prénom *</label>
+                                <input type="text" id="prenom" name="prenom" class="form-control" 
+                                       value="{{ user.prenom }}" required>
+                            </div>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="email">Email</label>
+                            <input type="email" id="email" class="form-control" 
+                                   value="{{ user.email }}" readonly>
+                            <small class="field-hint">L'email ne peut pas être modifié</small>
+                        </div>
+                        
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="filiere">Filière</label>
+                                <input type="text" id="filiere" name="filiere" class="form-control" 
+                                       value="{{ user.filiere or '' }}">
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="annee_etude">Année d'étude</label>
+                                <select id="annee_etude" name="annee_etude" class="form-control">
+                                    <option value="">-- Sélectionnez --</option>
+                                    {% for i in range(1, 6) %}
+                                        <option value="{{ i }}" {% if user.annee_etude == i %}selected{% endif %}>
+                                            {{ i }}ère année
+                                        </option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="telephone">Téléphone</label>
+                            <input type="tel" id="telephone" name="telephone" class="form-control" 
+                                   value="{{ user.telephone or '' }}">
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="description">Description / À propos</label>
+                            <textarea id="description" name="description" class="form-control" rows="4">{{ user.description or '' }}</textarea>
+                            <small class="field-hint">Parlez de vous, de vos centres d'intérêt, de vos objectifs...</small>
+                        </div>
+                    </div>
+                    
+                    <!-- Compétences -->
+                    <div class="form-section">
+                        <div class="section-header">
+                            <div class="section-icon">
+                                <i class="fas fa-briefcase"></i>
+                            </div>
+                            <div>
+                                <h3>Mes compétences</h3>
+                                <p class="section-description">Ajoutez vos compétences avec leur niveau</p>
+                            </div>
+                        </div>
+                        
+                        <div id="competences-container" class="competences-container">
+                            {% if competences %}
+                                {% for comp in competences %}
+                                    <div class="competence-row">
+                                        <input type="text" name="competences[]" class="form-control competence-input" 
+                                               value="{{ comp.competence }}" placeholder="Ex: Excel, Python, Anglais..." required>
+                                        <select name="niveaux[]" class="form-control niveau-select">
+                                            <option value="Débutant" {% if comp.niveau == 'Débutant' %}selected{% endif %}>Débutant</option>
+                                            <option value="Intermediaire" {% if comp.niveau == 'Intermediaire' %}selected{% endif %}>Intermédiaire</option>
+                                            <option value="Avancé" {% if comp.niveau == 'Avancé' %}selected{% endif %}>Avancé</option>
+                                            <option value="Expert" {% if comp.niveau == 'Expert' %}selected{% endif %}>Expert</option>
+                                        </select>
+                                        <button type="button" class="btn btn-danger remove-competence">
+                                            <i class="fas fa-minus"></i>
+                                        </button>
+                                    </div>
+                                {% endfor %}
+                            {% else %}
+                                <div class="competence-row">
+                                    <input type="text" name="competences[]" class="form-control competence-input" 
+                                           placeholder="Ex: Excel, Python, Anglais..." required>
+                                    <select name="niveaux[]" class="form-control niveau-select">
+                                        <option value="Débutant">Débutant</option>
+                                        <option value="Intermediaire" selected>Intermédiaire</option>
+                                        <option value="Avancé">Avancé</option>
+                                        <option value="Expert">Expert</option>
+                                    </select>
+                                    <button type="button" class="btn btn-danger remove-competence">
+                                        <i class="fas fa-minus"></i>
+                                    </button>
+                                </div>
+                            {% endif %}
+                        </div>
+                        
+                        <button type="button" id="add-competence" class="btn btn-secondary add-competence-btn">
+                            <i class="fas fa-plus"></i>
+                            Ajouter une compétence
+                        </button>
+                    </div>
+                    
+                    <!-- Boutons d'action -->
+                    <div class="form-actions">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-save"></i>
+                            Enregistrer les modifications
+                        </button>
+                        <a href="{{ url_for('myprofile') }}" class="btn btn-secondary">
+                            <i class="fas fa-times"></i>
+                            Annuler
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    /* Conteneur principal */
+    .edit-profile-container {
+        max-width: 800px;
+        margin: 0 auto;
+    }
+    
+    /* En-tête */
+    .edit-profile-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 2.5rem;
+    }
+    
+    .edit-profile-header .header-icon {
+        margin-right: 0.75rem;
+    }
+    
+    /* Carte */
+    .edit-profile-card {
+        background: white;
+        border: none;
+        box-shadow: var(--shadow-xl);
+        border-radius: var(--radius-xl);
+        overflow: hidden;
+    }
+    
+    .card-top-bar {
+        height: 6px;
+        width: 100%;
+        background: linear-gradient(90deg, var(--primary-500) 0%, var(--accent-indigo) 100%);
+    }
+    
+    .edit-profile-content {
+        padding: 2.5rem;
+    }
+    
+    /* Sections du formulaire */
+    .form-section {
+        margin-bottom: 3rem;
+        padding-bottom: 2.5rem;
+        border-bottom: 1px solid var(--cloud-200);
+    }
+    
+    .section-header {
+        display: flex;
+        align-items: flex-start;
+        gap: 1rem;
+        margin-bottom: 2rem;
+    }
+    
+    .section-icon {
+        width: 50px;
+        height: 50px;
+        background: linear-gradient(135deg, var(--primary-400) 0%, var(--primary-500) 100%);
+        border-radius: var(--radius);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-size: 1.2rem;
+    }
+    
+    .section-header h3 {
+        margin: 0 0 0.5rem 0;
+        color: var(--cloud-900);
+        font-size: 1.3rem;
+    }
+    
+    .section-description {
+        margin: 0;
+        color: var(--cloud-600);
+        font-size: 0.95rem;
+    }
+    
+    /* Rows et groupes */
+    .form-row {
+        display: flex;
+        gap: 1.5rem;
+        margin-bottom: 1.5rem;
+    }
+    
+    .form-group {
+        margin-bottom: 1.5rem;
+        flex: 1;
+    }
+    
+    .form-group label {
+        display: block;
+        margin-bottom: 0.75rem;
+        font-weight: 600;
+        color: var(--cloud-800);
+        font-size: 1rem;
+    }
+    
+    .form-control {
+        width: 100%;
+        padding: 0.875rem 1rem;
+        border: 1px solid var(--cloud-300);
+        border-radius: var(--radius);
+        font-size: 1rem;
+        transition: all var(--transition);
+        background: white;
+    }
+    
+    .form-control:focus {
+        outline: none;
+        border-color: var(--primary-400);
+        box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+    }
+    
+    .form-control:read-only {
+        background: var(--cloud-50);
+        color: var(--cloud-600);
+        cursor: not-allowed;
+    }
+    
+    textarea.form-control {
+        min-height: 120px;
+        resize: vertical;
+        line-height: 1.5;
+    }
+    
+    select.form-control {
+        cursor: pointer;
+    }
+    
+    .field-hint {
+        display: block;
+        margin-top: 0.5rem;
+        color: var(--cloud-500);
+        font-size: 0.85rem;
+    }
+    
+    /* Compétences */
+    .competences-container {
+        margin-bottom: 1.5rem;
+    }
+    
+    .competence-row {
+        display: flex;
+        gap: 1rem;
+        margin-bottom: 1rem;
+        align-items: center;
+    }
+    
+    .competence-input {
+        flex: 2;
+    }
+    
+    .niveau-select {
+        flex: 1;
+    }
+    
+    .remove-competence {
+        width: 44px;
+        height: 44px;
+        padding: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: var(--radius);
+    }
+    
+    .add-competence-btn {
+        margin-top: 0.5rem;
+        padding: 0.75rem 1.5rem;
+    }
+    
+    /* Actions */
+    .form-actions {
+        display: flex;
+        gap: 1rem;
+        margin-top: 2rem;
+        padding-top: 2rem;
+        border-top: 1px solid var(--cloud-200);
+    }
+    
+    .form-actions .btn {
+        padding: 1rem 2rem;
+        font-size: 1rem;
+        font-weight: 600;
+        border-radius: var(--radius-lg);
+        flex: 1;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.5rem;
+    }
+    
+    .form-actions .btn-primary {
+        background: linear-gradient(135deg, var(--primary-500) 0%, var(--primary-600) 100%);
+        border: none;
+    }
+    
+    /* Responsive */
+    @media (max-width: 768px) {
+        .edit-profile-header {
+            flex-direction: column;
+            gap: 1rem;
+            text-align: center;
+        }
+        
+        .form-row {
+            flex-direction: column;
+            gap: 0;
+        }
+        
+        .competence-row {
+            flex-direction: column;
+            gap: 1rem;
+        }
+        
+        .competence-input,
+        .niveau-select {
+            width: 100%;
+        }
+        
+        .remove-competence {
+            width: 100%;
+            height: auto;
+            padding: 0.75rem;
+        }
+        
+        .form-actions {
+            flex-direction: column;
+        }
+        
+        .edit-profile-content {
+            padding: 1.5rem;
+        }
+    }
+    
+    @media (max-width: 480px) {
+        .section-header {
+            flex-direction: column;
+            text-align: center;
+            align-items: center;
+        }
+        
+        .section-icon {
+            margin-bottom: 0.5rem;
+        }
+    }
+</style>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const container = document.getElementById('competences-container');
+        const addButton = document.getElementById('add-competence');
+        
+        // Ajouter une compétence
+        addButton.addEventListener('click', function() {
+            const newRow = document.createElement('div');
+            newRow.className = 'competence-row';
+            newRow.innerHTML = `
+                <input type="text" name="competences[]" class="form-control competence-input" 
+                       placeholder="Ex: Excel, Python, Anglais..." required>
+                <select name="niveaux[]" class="form-control niveau-select">
+                    <option value="Débutant">Débutant</option>
+                    <option value="Intermediaire" selected>Intermédiaire</option>
+                    <option value="Avancé">Avancé</option>
+                    <option value="Expert">Expert</option>
+                </select>
+                <button type="button" class="btn btn-danger remove-competence">
+                    <i class="fas fa-minus"></i>
+                </button>
+            `;
+            container.appendChild(newRow);
+            
+            // Focus sur le nouvel input
+            const newInput = newRow.querySelector('.competence-input');
+            newInput.focus();
+            
+            // Animation
+            newRow.style.opacity = '0';
+            newRow.style.transform = 'translateY(10px)';
+            
+            requestAnimationFrame(() => {
+                newRow.style.transition = 'all 0.3s ease';
+                newRow.style.opacity = '1';
+                newRow.style.transform = 'translateY(0)';
+            });
+        });
+        
+        // Supprimer une compétence
+        container.addEventListener('click', function(e) {
+            if (e.target.closest('.remove-competence')) {
+                const row = e.target.closest('.competence-row');
+                const rows = container.querySelectorAll('.competence-row');
+                
+                if (rows.length > 1) {
+                    // Animation de suppression
+                    row.style.opacity = '0';
+                    row.style.transform = 'translateX(-10px)';
+                    row.style.transition = 'all 0.3s ease';
+                    
+                    setTimeout(() => {
+                        row.remove();
+                    }, 300);
+                } else {
+                    // Ne pas supprimer la dernière ligne
+                    alert('Vous devez avoir au moins une compétence');
+                }
+            }
+        });
+        
+        // Validation du formulaire
+        const form = document.getElementById('editProfileForm');
+        form.addEventListener('submit', function(e) {
+            const nom = document.getElementById('nom').value.trim();
+            const prenom = document.getElementById('prenom').value.trim();
+            const competences = Array.from(container.querySelectorAll('.competence-input'))
+                .map(input => input.value.trim())
+                .filter(value => value);
+            
+            // Validation de base
+            if (!nom || !prenom) {
+                e.preventDefault();
+                alert('Le nom et le prénom sont obligatoires.');
+                return false;
+            }
+            
+            if (competences.length === 0) {
+                e.preventDefault();
+                alert('Veuillez ajouter au moins une compétence.');
+                return false;
+            }
+            
+            // Vérifier les compétences vides
+            for (let i = 0; i < competences.length; i++) {
+                if (!competences[i]) {
+                    e.preventDefault();
+                    alert('Veuillez remplir tous les champs de compétences.');
+                    return false;
+                }
+            }
+            
+            // Ajouter l'état de chargement
+            const submitBtn = this.querySelector('button[type="submit"]');
+            const originalHTML = submitBtn.innerHTML;
+            submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Enregistrement...';
+            submitBtn.disabled = true;
+            
+            // Réactiver après 3 secondes en cas d'erreur
+            setTimeout(() => {
+                submitBtn.innerHTML = originalHTML;
+                submitBtn.disabled = false;
+            }, 3000);
+            
+            return true;
+        });
+        
+        // Animation des champs au focus
+        const inputs = document.querySelectorAll('.form-control');
+        inputs.forEach(input => {
+            input.addEventListener('focus', function() {
+                this.style.borderColor = 'var(--primary-400)';
+                this.style.boxShadow = '0 0 0 3px rgba(59, 130, 246, 0.1)';
+            });
+            
+            input.addEventListener('blur', function() {
+                this.style.borderColor = 'var(--cloud-300)';
+                this.style.boxShadow = 'none';
+            });
+        });
+    });
+</script>
+{% endblock %}

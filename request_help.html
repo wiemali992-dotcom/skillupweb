@@ -1,0 +1,240 @@
+{% extends "base.html" %}
+
+{% block title %}Demander de l'aide - SkillUp{% endblock %}
+
+{% block content %}
+<div class="fade-in">
+    <!-- Header -->
+    <div class="glass-effect" style="border-radius: var(--radius-xl); padding: 2.5rem; margin-bottom: 2.5rem; background: white; border: 1px solid rgba(226, 232, 240, 0.8); box-shadow: var(--shadow);">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+            <div style="display: flex; align-items: center; gap: 1rem;">
+                <div style="width: 60px; height: 60px; background: linear-gradient(135deg, var(--primary-500) 0%, var(--primary-600) 100%); border-radius: 12px; display: flex; align-items: center; justify-content: center; color: white; box-shadow: 0 4px 12px rgba(59, 130, 246, 0.2);">
+                    <i class="fas fa-hands-helping" style="font-size: 1.5rem;"></i>
+                </div>
+                <div>
+                    <h1 class="text-gradient" style="margin: 0; font-size: 2.2rem;">
+                        Demander de l'aide
+                    </h1>
+                    <p style="color: var(--cloud-600); margin-top: 0.25rem; font-size: 1rem;">
+                        Envoyez une demande officielle d'aide à cet utilisateur
+                    </p>
+                </div>
+            </div>
+            <a href="{{ url_for('profile', user_id=user_id) }}" class="btn btn-secondary" style="border-radius: 10px; padding: 0.75rem 1.5rem; font-weight: 500;">
+                <i class="fas fa-arrow-left"></i>
+                Retour au profil
+            </a>
+        </div>
+    </div>
+
+    <!-- Main Form Card -->
+    <div class="card" style="border: none; box-shadow: var(--shadow-lg); border-radius: var(--radius-xl); overflow: hidden; max-width: 900px; margin: 0 auto; border: 1px solid rgba(226, 232, 240, 0.8);">
+        <!-- Top gradient bar -->
+        <div style="height: 4px; width: 100%; background: linear-gradient(90deg, var(--primary-500) 0%, var(--primary-400) 100%);"></div>
+        
+        <div style="padding: 2.5rem;">
+            <h2 style="margin-bottom: 0.5rem; color: var(--cloud-900); font-weight: 600; font-size: 1.75rem;">
+                Formulaire de demande d'aide
+            </h2>
+            <p style="color: var(--cloud-600); margin-bottom: 2rem; font-size: 1rem;">
+                En soumettant cette demande, vous initiez une transaction d'aide officielle. 
+                Une fois l'aide fournie et confirmée, l'utilisateur gagnera des points de réputation.
+            </p>
+            
+            <!-- Info Banner -->
+            <div style="background: linear-gradient(135deg, rgba(59, 130, 246, 0.05) 0%, rgba(99, 102, 241, 0.05) 100%); border: 1px solid rgba(59, 130, 246, 0.2); border-left: 4px solid var(--primary-500); border-radius: var(--radius); padding: 1.5rem; margin-bottom: 2rem;">
+                <div style="display: flex; gap: 1rem; align-items: flex-start;">
+                    <div style="width: 36px; height: 36px; background: linear-gradient(135deg, var(--primary-500) 0%, var(--primary-400) 100%); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; flex-shrink: 0;">
+                        <i class="fas fa-info-circle" style="font-size: 1rem;"></i>
+                    </div>
+                    <div>
+                        <h3 style="margin-bottom: 0.75rem; color: var(--primary-700); font-weight: 600; font-size: 1.1rem;">
+                            Comment ça marche ?
+                        </h3>
+                        <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 0.75rem;">
+                            <div style="display: flex; gap: 0.75rem; align-items: center;">
+                                <div style="width: 24px; height: 24px; background: var(--primary-100); border-radius: 6px; display: flex; align-items: center; justify-content: center; color: var(--primary-600); font-weight: 600; font-size: 0.75rem;">
+                                    1
+                                </div>
+                                <span style="color: var(--cloud-700); font-size: 0.9rem;">Vous envoyez cette demande</span>
+                            </div>
+                            <div style="display: flex; gap: 0.75rem; align-items: center;">
+                                <div style="width: 24px; height: 24px; background: var(--primary-100); border-radius: 6px; display: flex; align-items: center; justify-content: center; color: var(--primary-600); font-weight: 600; font-size: 0.75rem;">
+                                    2
+                                </div>
+                                <span style="color: var(--cloud-700); font-size: 0.9rem;">L'utilisateur accepte et vous aide</span>
+                            </div>
+                            <div style="display: flex; gap: 0.75rem; align-items: center;">
+                                <div style="width: 24px; height: 24px; background: var(--primary-100); border-radius: 6px; display: flex; align-items: center; justify-content: center; color: var(--primary-600); font-weight: 600; font-size: 0.75rem;">
+                                    3
+                                </div>
+                                <span style="color: var(--cloud-700); font-size: 0.9rem;">Vous confirmez l'aide reçue</span>
+                            </div>
+                            <div style="display: flex; gap: 0.75rem; align-items: center;">
+                                <div style="width: 24px; height: 24px; background: var(--primary-100); border-radius: 6px; display: flex; align-items: center; justify-content: center; color: var(--primary-600); font-weight: 600; font-size: 0.75rem;">
+                                    4
+                                </div>
+                                <span style="color: var(--cloud-700); font-size: 0.9rem;">L'utilisateur gagne des points</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Form -->
+            <form method="POST">
+                <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 1.5rem; margin-bottom: 2rem;">
+                    <div class="form-group">
+                        <label for="skill" style="display: block; margin-bottom: 0.5rem; font-weight: 500; color: var(--cloud-700);">Compétence concernée *</label>
+                        <input type="text" id="skill" name="skill" class="form-control" 
+                               style="width: 100%; padding: 0.875rem 1rem; border: 1px solid var(--cloud-300); border-radius: var(--radius); font-size: 1rem; transition: all var(--transition);"
+                               placeholder="Ex: Python, Excel, Anglais..." required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="estimated_time" style="display: block; margin-bottom: 0.5rem; font-weight: 500; color: var(--cloud-700);">Temps estimé</label>
+                        <select id="estimated_time" name="estimated_time" class="form-control"
+                                style="width: 100%; padding: 0.875rem 1rem; border: 1px solid var(--cloud-300); border-radius: var(--radius); font-size: 1rem; transition: all var(--transition);">
+                            <option value="">-- Non spécifié --</option>
+                            <option value="15min">≤ 15 minutes</option>
+                            <option value="30min">≈ 30 minutes</option>
+                            <option value="1h">≈ 1 heure</option>
+                            <option value="2h">≈ 2 heures</option>
+                            <option value="plus">Plus de 2 heures</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="form-group" style="margin-bottom: 2rem;">
+                    <label for="description" style="display: block; margin-bottom: 0.5rem; font-weight: 500; color: var(--cloud-700);">Description détaillée *</label>
+                    <textarea id="description" name="description" class="form-control" rows="6"
+                              style="width: 100%; padding: 0.875rem 1rem; border: 1px solid var(--cloud-300); border-radius: var(--radius); font-size: 1rem; transition: all var(--transition); min-height: 150px; resize: vertical;"
+                              placeholder="Décrivez précisément ce dont vous avez besoin..." required></textarea>
+                    <small style="color: var(--cloud-500); font-size: 0.875rem; margin-top: 0.5rem; display: block;">
+                        <i class="fas fa-lightbulb" style="color: var(--accent-amber); margin-right: 0.25rem;"></i>
+                        Plus votre demande est précise, plus il sera facile de vous aider
+                    </small>
+                </div>
+
+                <!-- Form Actions -->
+                <div style="display: flex; justify-content: flex-end; gap: 1rem; padding-top: 2rem; border-top: 1px solid var(--cloud-200);">
+                    <a href="{{ url_for('profile', user_id=user_id) }}" class="btn btn-secondary" 
+                       style="border-radius: 10px; padding: 0.875rem 2rem; font-weight: 500; display: inline-flex; align-items: center; gap: 0.5rem;">
+                        <i class="fas fa-times"></i>
+                        Annuler
+                    </a>
+                    <button type="submit" class="btn btn-primary"
+                            style="border-radius: 10px; padding: 0.875rem 2rem; font-weight: 500; display: inline-flex; align-items: center; gap: 0.5rem; background: linear-gradient(135deg, var(--primary-500) 0%, var(--primary-600) 100%); border: none; box-shadow: var(--shadow-blue);">
+                        <i class="fas fa-paper-plane"></i>
+                        Envoyer la demande
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<style>
+    .request-help-container {
+        max-width: 900px;
+        margin: 0 auto;
+        padding: 2rem 1rem;
+    }
+    
+    .form-control:focus {
+        outline: none;
+        border-color: var(--primary-400);
+        box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+    }
+    
+    /* Responsive */
+    @media (max-width: 768px) {
+        .glass-effect {
+            padding: 1.5rem !important;
+        }
+        
+        .glass-effect > div {
+            flex-direction: column !important;
+            gap: 1rem !important;
+            align-items: flex-start !important;
+        }
+        
+        .card > div {
+            padding: 1.5rem !important;
+        }
+        
+        .card > div > div:first-child {
+            grid-template-columns: 1fr !important;
+            gap: 1rem !important;
+        }
+        
+        .card > div > div:nth-child(2) > div > div > div {
+            grid-template-columns: 1fr !important;
+        }
+        
+        .card > div > div:last-child {
+            flex-direction: column !important;
+            align-items: stretch !important;
+        }
+        
+        .btn {
+            width: 100% !important;
+            justify-content: center !important;
+        }
+    }
+</style>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Add focus effect to form controls
+        const formControls = document.querySelectorAll('.form-control');
+        formControls.forEach(control => {
+            control.addEventListener('focus', function() {
+                this.style.borderColor = 'var(--primary-400)';
+                this.style.boxShadow = '0 0 0 3px rgba(59, 130, 246, 0.1)';
+            });
+            
+            control.addEventListener('blur', function() {
+                this.style.borderColor = 'var(--cloud-300)';
+                this.style.boxShadow = 'none';
+            });
+        });
+        
+        // Character count for description
+        const description = document.getElementById('description');
+        if (description) {
+            const charCount = document.createElement('div');
+            charCount.style.color = 'var(--cloud-500)';
+            charCount.style.fontSize = '0.875rem';
+            charCount.style.marginTop = '0.5rem';
+            charCount.style.display = 'flex';
+            charCount.style.justifyContent = 'space-between';
+            charCount.style.alignItems = 'center';
+            
+            const counter = document.createElement('span');
+            counter.textContent = '0/500 caractères';
+            
+            const hint = document.createElement('span');
+            hint.innerHTML = '<i class="fas fa-lightbulb" style="color: var(--accent-amber); margin-right: 0.25rem;"></i> Soyez précis pour une aide efficace';
+            
+            charCount.appendChild(counter);
+            charCount.appendChild(hint);
+            
+            description.parentNode.appendChild(charCount);
+            
+            description.addEventListener('input', function() {
+                const length = this.value.length;
+                counter.textContent = `${length}/500 caractères`;
+                
+                if (length > 500) {
+                    counter.style.color = 'var(--accent-rose)';
+                } else if (length > 300) {
+                    counter.style.color = 'var(--accent-amber)';
+                } else {
+                    counter.style.color = 'var(--cloud-500)';
+                }
+            });
+        }
+    });
+</script>
+{% endblock %}

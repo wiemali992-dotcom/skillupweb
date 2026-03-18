@@ -1,0 +1,239 @@
+{% extends "base.html" %}
+
+{% block title %}Contacter {{ user.prenom }} {{ user.nom }} - SkillUp{% endblock %}
+
+{% block content %}
+<div class="fade-in">
+    <div class="contact-container" style="max-width: 800px; margin: 0 auto;">
+        <div class="contact-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2.5rem;">
+            <h1 class="text-gradient" style="margin: 0;">
+                <i class="fas fa-envelope" style="margin-right: 0.75rem;"></i>
+                Contacter {{ user.prenom }} {{ user.nom }}
+            </h1>
+            <a href="{{ url_for('index') }}" class="btn btn-secondary" style="border-radius: var(--radius-lg);">
+                ← Retour à l'accueil
+            </a>
+        </div>
+        
+        <div class="card" style="background: white; border: none; box-shadow: var(--shadow-xl); overflow: hidden; margin-bottom: 2rem;">
+            <!-- Top colored bar -->
+            <div style="height: 6px; width: 100%; background: linear-gradient(90deg, var(--primary-500) 0%, var(--accent-indigo) 100%);"></div>
+            
+            <div style="padding: 2.5rem;">
+                <!-- User Info -->
+                <div class="user-info-section" style="display: flex; align-items: center; gap: 1.5rem; margin-bottom: 2.5rem; padding-bottom: 2rem; border-bottom: 1px solid var(--cloud-200);">
+                    <div style="width: 100px; height: 100px; background: linear-gradient(135deg, var(--primary-400) 0%, var(--primary-600) 100%); 
+                                 border-radius: var(--radius-xl); display: flex; align-items: center; justify-content: center; color: white; font-size: 2.5rem; font-weight: 700;">
+                        {{ user.prenom[0] }}{{ user.nom[0] }}
+                    </div>
+                    <div style="flex: 1;">
+                        <h2 style="margin: 0 0 0.5rem 0; color: var(--cloud-900);">{{ user.prenom }} {{ user.nom }}</h2>
+                        {% if user.filiere %}
+                            <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.5rem; color: var(--cloud-600);">
+                                <i class="fas fa-graduation-cap" style="color: var(--primary-500);"></i>
+                                <span>{{ user.filiere }}</span>
+                            </div>
+                        {% endif %}
+                        {% if user.annee_etude %}
+                            <div style="display: flex; align-items: center; gap: 0.5rem; color: var(--cloud-600);">
+                                <i class="fas fa-calendar-alt" style="color: var(--primary-500);"></i>
+                                <span>{{ user.annee_etude }}ère année</span>
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+                
+                <!-- Contact Information -->
+                <div class="contact-info-section">
+                    <h3 style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 1.5rem; color: var(--cloud-800);">
+                        <i class="fas fa-id-card" style="color: var(--primary-500);"></i>
+                        Informations de contact
+                    </h3>
+                    
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 1.5rem; margin-bottom: 2.5rem;">
+                        <!-- Email -->
+                        <div class="contact-card" style="background: linear-gradient(135deg, var(--cloud-50) 0%, var(--cloud-100) 100%); 
+                                                           padding: 1.5rem; border-radius: var(--radius-lg); border: 1px solid var(--cloud-200);
+                                                           transition: all var(--transition);"
+                             onmouseenter="this.style.transform='translateY(-5px)'; this.style.boxShadow='var(--shadow-lg)'; this.style.borderColor='var(--primary-300)';"
+                             onmouseleave="this.style.transform='translateY(0)'; this.style.boxShadow='none'; this.style.borderColor='var(--cloud-200)';">
+                            <div style="display: flex; align-items: center; gap: 1rem; margin-bottom: 1rem;">
+                                <div style="width: 50px; height: 50px; background: linear-gradient(135deg, var(--accent-rose) 0%, #e11d48 100%); 
+                                             border-radius: var(--radius); display: flex; align-items: center; justify-content: center; color: white;">
+                                    <i class="fas fa-envelope" style="font-size: 1.5rem;"></i>
+                                </div>
+                                <div>
+                                    <h4 style="margin: 0; color: var(--cloud-800);">Adresse email</h4>
+                                    <small style="color: var(--cloud-500);">Contact principal</small>
+                                </div>
+                            </div>
+                            <div style="background: white; padding: 1rem; border-radius: var(--radius); border: 1px solid var(--cloud-200);">
+                                <a href="mailto:{{ user.email }}" 
+                                   style="color: var(--primary-600); text-decoration: none; font-weight: 500; word-break: break-all; display: block;">
+                                    {{ user.email }}
+                                </a>
+                            </div>
+                        </div>
+                        
+                        <!-- Phone -->
+                        {% if user.telephone %}
+                        <div class="contact-card" style="background: linear-gradient(135deg, var(--cloud-50) 0%, var(--cloud-100) 100%); 
+                                                           padding: 1.5rem; border-radius: var(--radius-lg); border: 1px solid var(--cloud-200);
+                                                           transition: all var(--transition);"
+                             onmouseenter="this.style.transform='translateY(-5px)'; this.style.boxShadow='var(--shadow-lg)'; this.style.borderColor='var(--primary-300)';"
+                             onmouseleave="this.style.transform='translateY(0)'; this.style.boxShadow='none'; this.style.borderColor='var(--cloud-200)';">
+                            <div style="display: flex; align-items: center; gap: 1rem; margin-bottom: 1rem;">
+                                <div style="width: 50px; height: 50px; background: linear-gradient(135deg, var(--accent-emerald) 0%, var(--accent-teal) 100%); 
+                                             border-radius: var(--radius); display: flex; align-items: center; justify-content: center; color: white;">
+                                    <i class="fas fa-phone-alt" style="font-size: 1.5rem;"></i>
+                                </div>
+                                <div>
+                                    <h4 style="margin: 0; color: var(--cloud-800);">Téléphone</h4>
+                                    <small style="color: var(--cloud-500);">Contact secondaire</small>
+                                </div>
+                            </div>
+                            <div style="background: white; padding: 1rem; border-radius: var(--radius); border: 1px solid var(--cloud-200);">
+                                <a href="tel:{{ user.telephone }}" 
+                                   style="color: var(--primary-600); text-decoration: none; font-weight: 500; display: block;">
+                                    {{ user.telephone }}
+                                </a>
+                            </div>
+                        </div>
+                        {% endif %}
+                    </div>
+                    
+                    <!-- Tips -->
+                    <div class="tips-card" style="background: linear-gradient(135deg, rgba(255, 243, 205, 0.3) 0%, rgba(255, 248, 225, 0.3) 100%); 
+                                                    padding: 1.5rem; border-radius: var(--radius-lg); border: 1px solid rgba(255, 193, 7, 0.2);
+                                                    border-left: 4px solid var(--accent-amber);">
+                        <div style="display: flex; align-items: flex-start; gap: 1rem;">
+                            <div style="flex-shrink: 0;">
+                                <i class="fas fa-lightbulb" style="color: var(--accent-amber); font-size: 1.8rem;"></i>
+                            </div>
+                            <div>
+                                <h4 style="margin: 0 0 0.75rem 0; color: var(--cloud-800);">
+                                    💡 Conseils pour un bon contact
+                                </h4>
+                                <div style="display: flex; flex-direction: column; gap: 0.75rem;">
+                                    <div style="display: flex; align-items: flex-start; gap: 0.75rem;">
+                                        <div style="width: 24px; height: 24px; background: var(--accent-amber); color: white; 
+                                                     border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.875rem;">
+                                            1
+                                        </div>
+                                        <p style="margin: 0; color: var(--cloud-700);">
+                                            <strong>Présentez-vous</strong> : Mentionnez que vous venez de SkillUp et donnez votre nom
+                                        </p>
+                                    </div>
+                                    <div style="display: flex; align-items: flex-start; gap: 0.75rem;">
+                                        <div style="width: 24px; height: 24px; background: var(--accent-amber); color: white; 
+                                                     border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.875rem;">
+                                            2
+                                        </div>
+                                        <p style="margin: 0; color: var(--cloud-700);">
+                                            <strong>Soyez clair</strong> : Expliquez précisément votre demande ou votre proposition d'aide
+                                        </p>
+                                    </div>
+                                    <div style="display: flex; align-items: flex-start; gap: 0.75rem;">
+                                        <div style="width: 24px; height: 24px; background: var(--accent-amber); color: white; 
+                                                     border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.875rem;">
+                                            3
+                                        </div>
+                                        <p style="margin: 0; color: var(--cloud-700);">
+                                            <strong>Proposez des disponibilités</strong> : Suggérez des créaux horaires pour discuter
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Action Buttons -->
+        <div class="action-buttons" style="display: flex; gap: 1rem; flex-wrap: wrap;">
+            <a href="mailto:{{ user.email }}?subject=Demande%20via%20SkillUp&body=Bonjour%20{{ user.prenom }}%2C%0A%0AJe%20vous%20contacte%20via%20SkillUp.%0A%0A"
+               class="btn btn-primary" 
+               style="flex: 1; min-width: 200px; padding: 1rem 2rem; font-size: 1.1rem; font-weight: 600; border-radius: var(--radius-lg);
+                      background: linear-gradient(135deg, var(--primary-500) 0%, var(--primary-600) 100%); display: flex; align-items: center; justify-content: center; gap: 0.75rem;">
+                <i class="fas fa-paper-plane"></i>
+                Envoyer un email
+            </a>
+            
+            {% if user.telephone %}
+            <a href="tel:{{ user.telephone }}" 
+               class="btn btn-secondary" 
+               style="flex: 1; min-width: 200px; padding: 1rem 2rem; font-size: 1.1rem; font-weight: 600; border-radius: var(--radius-lg);
+                      background: linear-gradient(135deg, var(--accent-emerald) 0%, var(--accent-teal) 100%); display: flex; align-items: center; justify-content: center; gap: 0.75rem;">
+                <i class="fas fa-phone-alt"></i>
+                Appeler
+            </a>
+            {% endif %}
+            
+            <a href="{{ url_for('profile', user_id=user.id) }}" 
+               class="btn btn-secondary" 
+               style="flex: 1; min-width: 200px; padding: 1rem 2rem; font-size: 1.1rem; font-weight: 600; border-radius: var(--radius-lg);
+                      background: linear-gradient(135deg, var(--cloud-700) 0%, var(--cloud-800) 100%); display: flex; align-items: center; justify-content: center; gap: 0.75rem;">
+                <i class="fas fa-user"></i>
+                Voir le profil
+            </a>
+        </div>
+    </div>
+</div>
+
+<style>
+    .contact-card:hover .contact-icon {
+        transform: scale(1.1);
+        transition: transform var(--transition);
+    }
+    
+    @media (max-width: 768px) {
+        .user-info-section {
+            flex-direction: column;
+            text-align: center;
+        }
+        
+        .action-buttons {
+            flex-direction: column;
+        }
+        
+        .action-buttons .btn {
+            width: 100%;
+        }
+    }
+</style>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Add animation to contact cards
+        const contactCards = document.querySelectorAll('.contact-card');
+        contactCards.forEach(card => {
+            const icon = card.querySelector('.fa-envelope, .fa-phone-alt');
+            if (icon) {
+                card.addEventListener('mouseenter', function() {
+                    icon.style.transform = 'scale(1.1)';
+                    icon.style.transition = 'transform 0.3s ease';
+                });
+                
+                card.addEventListener('mouseleave', function() {
+                    icon.style.transform = 'scale(1)';
+                });
+            }
+        });
+        
+        // Pre-fill email template
+        const emailBtn = document.querySelector('a[href^="mailto:"]');
+        if (emailBtn) {
+            // Get current user info if available
+            const currentUserName = "{{ current_user.prenom if current_user.is_authenticated else 'Utilisateur' }}";
+            const emailBody = `Bonjour {{ user.prenom }},\n\nJe vous contacte via SkillUp. Je m'appelle ${currentUserName}.\n\n`;
+            
+            // Update email href with pre-filled body
+            const originalHref = emailBtn.getAttribute('href');
+            if (originalHref.includes('?')) {
+                emailBtn.setAttribute('href', originalHref.replace('body=', `body=${encodeURIComponent(emailBody)}`));
+            }
+        }
+    });
+</script>
+{% endblock %}

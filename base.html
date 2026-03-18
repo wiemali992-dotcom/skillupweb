@@ -1,0 +1,301 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>  
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SkillUp - {% block title %}Partage de compétences{% endblock %}</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <style>
+        /* Animations supplémentaires */
+        .pulse {
+            animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+        }
+        
+        @keyframes pulse {
+            0%, 100% {
+                opacity: 1;
+            }
+            50% {
+                opacity: .5;
+            }
+        }
+        
+        /* Custom scrollbar */
+        ::-webkit-scrollbar {
+            width: 10px;
+        }
+        
+        ::-webkit-scrollbar-track {
+            background: var(--cloud-100);
+        }
+        
+        ::-webkit-scrollbar-thumb {
+            background: var(--primary-300);
+            border-radius: 5px;
+        }
+        
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--primary-400);
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <header id="main-header">
+        <div class="container">
+            <nav class="navbar">
+                <a href="{{ url_for('index') }}" class="logo">
+                    
+                    <span>Skill <b></b><span class="text-gradient">Up</span></span>
+                </a>
+                
+                <ul class="nav-links">
+                    <li>
+                        <a href="{{ url_for('index') }}" class="nav-link {% if request.path == url_for('index') %}active{% endif %}">
+                            <i class="fas fa-home"></i>
+                            <span>Accueil</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="{{ url_for('search') }}" class="nav-link {% if request.path == url_for('search') %}active{% endif %}">
+                            <i class="fas fa-search"></i>
+                            <span>Rechercher</span>
+                        </a>
+                    </li>
+                    
+                    {% if current_user.is_authenticated %}
+                        <li>
+                            <a href="{{ url_for('messages') }}" class="nav-link {% if request.path == url_for('messages') %}active{% endif %}">
+                                <i class="fas fa-envelope"></i>
+                                <span>Messages</span>
+                                {% if notifications_count > 0 %}
+                                    <span class="notification-badge">{{ notifications_count }}</span>
+                                {% endif %}
+                            </a>
+                        </li>
+                        <li>
+                            <a href="{{ url_for('my_helps') }}" class="nav-link {% if request.path == url_for('my_helps') %}active{% endif %}">
+                                <i class="fas fa-hands-helping"></i>
+                                <span>Mes Aides</span>
+                            </a>
+                        </li>
+                        
+                        <li>
+                            <a href="{{ url_for('myprofile') }}" class="nav-link {% if request.path == url_for('myprofile') %}active{% endif %}">
+                                <div class="d-flex align-items-center gap-2">
+                                    <div class="avatar-sm" style="width: 32px; height: 32px; background: linear-gradient(135deg, var(--primary-500) 0%, var(--accent-indigo) 100%); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-weight: 600;">
+                                        {{ current_user.prenom[0] }}{{ current_user.nom[0] }}
+                                    </div>
+                                    <div class="d-flex flex-column">
+                                        <span style="font-weight: 600;">{{ current_user.prenom }}</span>
+                                        {% if user_score > 0 %}
+                                            <small class="score-badge-nav">{{ user_score }} pts</small>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </a>
+                        </li>
+                        
+                        <li>
+                            <a href="{{ url_for('logout') }}" class="btn btn-danger">
+                                <i class="fas fa-sign-out-alt"></i>
+                                <span>Déconnexion</span>
+                            </a>
+                        </li>
+                    {% else %}
+                        <li>
+                            <a href="{{ url_for('login') }}" class="btn btn-secondary">
+                                <i class="fas fa-sign-in-alt"></i>
+                                <span>Connexion</span>
+                            </a>
+                        </li>
+                        <li>
+                            <a href="{{ url_for('register') }}" class="btn btn-primary">
+                                <i class="fas fa-user-plus"></i>
+                                <span>Inscription</span>
+                            </a>
+                        </li>
+                    {% endif %}
+                </ul>
+            </nav>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main>
+        <div class="container">
+            <!-- Alertes Flash -->
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    <div class="alert-container">
+                        {% for category, message in messages %}
+                            <div class="alert alert-{{ category }} fade-in">
+                                <div class="alert-content">
+                                    <div class="alert-icon">
+                                        <i class="fas fa-{% if category == 'success' %}check-circle{% elif category == 'danger' %}exclamation-circle{% elif category == 'warning' %}exclamation-triangle{% else %}info-circle{% endif %}"></i>
+                                    </div>
+                                    <div>
+                                        {{ message }}
+                                    </div>
+                                </div>
+                                <button class="close-alert">
+                                    <i class="fas fa-times"></i>
+                                </button>
+                            </div>
+                        {% endfor %}
+                    </div>
+                {% endif %}
+            {% endwith %}
+            
+            {% block content %}{% endblock %}
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer>
+        <div class="footer-content">
+            <div class="container">
+                <p class="footer-text">
+                    <i class="fas fa-graduation-cap"></i> &copy; 2026 SkillUp - Plateforme d'échange de compétences entre étudiants
+                </p>
+                <p class="footer-text">
+                    Partagez vos connaissances, développez vos compétences
+                </p>
+                
+                <div class="footer-links">
+                    <a href="{{ url_for('index') }}">
+                        <i class="fas fa-home"></i> Accueil
+                    </a>
+                    <a href="{{ url_for('search') }}">
+                        <i class="fas fa-search"></i> Recherche
+                    </a>
+                    {% if current_user.is_authenticated %}
+                        <a href="{{ url_for('myprofile') }}">
+                            <i class="fas fa-user"></i> Mon Profil
+                        </a>
+                    {% endif %}
+                </div>
+                
+                <p class="footer-text" style="margin-top: 2rem; font-size: 0.8rem; opacity: 0.6;">
+                    Made with <i class="fas fa-heart" style="color: var(--accent-rose);"></i> by students for students
+                </p>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        // Header scroll effect
+        const header = document.getElementById('main-header');
+        window.addEventListener('scroll', () => {
+            if (window.scrollY > 50) {
+                header.classList.add('header-scrolled');
+            } else {
+                header.classList.remove('header-scrolled');
+            }
+        });
+
+        // Close alerts
+        document.addEventListener('DOMContentLoaded', function() {
+            const closeButtons = document.querySelectorAll('.close-alert');
+            closeButtons.forEach(button => {
+                button.addEventListener('click', function() {
+                    const alert = this.closest('.alert');
+                    alert.style.opacity = '0';
+                    alert.style.transform = 'translateY(-10px)';
+                    alert.style.transition = 'all 0.3s ease';
+                    
+                    setTimeout(() => {
+                        alert.style.display = 'none';
+                    }, 300);
+                });
+            });
+            
+            // Auto-hide alerts after 5 seconds
+            setTimeout(() => {
+                const alerts = document.querySelectorAll('.alert');
+                alerts.forEach(alert => {
+                    alert.style.opacity = '0';
+                    alert.style.transform = 'translateY(-10px)';
+                    alert.style.transition = 'all 0.3s ease';
+                    
+                    setTimeout(() => {
+                        alert.style.display = 'none';
+                    }, 300);
+                });
+            }, 5000);
+            
+            // Add animation classes to elements on scroll
+            const observerOptions = {
+                threshold: 0.1,
+                rootMargin: '0px 0px -100px 0px'
+            };
+            
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        entry.target.classList.add('fade-in');
+                    }
+                });
+            }, observerOptions);
+            
+            // Observe elements with data-animate attribute
+            document.querySelectorAll('[data-animate]').forEach(el => {
+                observer.observe(el);
+            });
+            
+            // Initialize tooltips
+            const tooltips = document.querySelectorAll('[title]');
+            tooltips.forEach(tooltip => {
+                tooltip.addEventListener('mouseenter', function(e) {
+                    const title = this.getAttribute('title');
+                    if (title) {
+                        const tooltipEl = document.createElement('div');
+                        tooltipEl.className = 'tooltip';
+                        tooltipEl.textContent = title;
+                        document.body.appendChild(tooltipEl);
+                        
+                        const rect = this.getBoundingClientRect();
+                        tooltipEl.style.position = 'fixed';
+                        tooltipEl.style.left = rect.left + rect.width / 2 + 'px';
+                        tooltipEl.style.top = rect.top - 40 + 'px';
+                        tooltipEl.style.transform = 'translateX(-50%)';
+                        tooltipEl.style.background = 'var(--cloud-800)';
+                        tooltipEl.style.color = 'white';
+                        tooltipEl.style.padding = '0.5rem 1rem';
+                        tooltipEl.style.borderRadius = '6px';
+                        tooltipEl.style.fontSize = '0.875rem';
+                        tooltipEl.style.whiteSpace = 'nowrap';
+                        tooltipEl.style.zIndex = '10000';
+                        
+                        this.setAttribute('data-tooltip', 'true');
+                        this.removeAttribute('title');
+                        
+                        this.addEventListener('mouseleave', function() {
+                            if (tooltipEl.parentNode) {
+                                tooltipEl.parentNode.removeChild(tooltipEl);
+                            }
+                            this.setAttribute('title', title);
+                            this.removeAttribute('data-tooltip');
+                        }, { once: true });
+                    }
+                });
+            });
+        });
+        
+        // Smooth scroll to top
+        function scrollToTop() {
+            window.scrollTo({
+                top: 0,
+                behavior: 'smooth'
+            });
+        }
+    </script>
+    
+    {% block scripts %}{% endblock %}
+</body>
+</html>

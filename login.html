@@ -1,0 +1,354 @@
+{% extends "base.html" %}
+
+{% block title %}Connexion - SkillUp{% endblock %}
+
+{% block content %}
+<div class="fade-in">
+    <div class="auth-page-container">
+        <!-- Carte de connexion seule -->
+        <div class="auth-card">
+            <!-- Logo et titre -->
+            <div class="auth-header">
+                <div class="auth-logo">
+                    <h1 class="logo-text">Skill<span>Up</span></h1>
+                </div>
+                <h2 class="auth-title">
+                    <i class="fas fa-sign-in-alt"></i>
+                    Connexion
+                </h2>
+                <p class="auth-subtitle">Accédez à votre compte pour partager vos compétences</p>
+            </div>
+            
+            <!-- Formulaire -->
+            <form method="POST" class="auth-form">
+                <div class="form-group">
+                    <label for="email" class="form-label">
+                        <i class="fas fa-envelope"></i>
+                        Adresse email
+                    </label>
+                    <input type="email" id="email" name="email" class="form-control" 
+                           placeholder="votre@email.com" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="password" class="form-label">
+                        <i class="fas fa-lock"></i>
+                        Mot de passe
+                    </label>
+                    <input type="password" id="password" name="password" class="form-control" 
+                           placeholder="Votre mot de passe" required>
+                </div>
+                
+                <button type="submit" class="btn btn-primary auth-submit-btn">
+                    <i class="fas fa-sign-in-alt"></i>
+                    Se connecter
+                </button>
+                
+                <div class="auth-divider">
+                    <span>ou</span>
+                </div>
+                
+                <div class="auth-links">
+                    <p>
+                        Pas encore de compte ? 
+                        <a href="{{ url_for('register') }}" class="auth-link">
+                            <i class="fas fa-user-plus"></i>
+                            Inscrivez-vous
+                        </a>
+                    </p>
+                    <p>
+                        <a href="{{ url_for('index') }}" class="auth-link">
+                            <i class="fas fa-home"></i>
+                            Retour à l'accueil
+                        </a>
+                    </p>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<style>
+    /* Conteneur principal - centré */
+    .auth-page-container {
+        max-width: 500px;
+        margin: 0 auto;
+        padding: 2rem;
+        min-height: calc(100vh - 200px);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    
+    /* Carte d'authentification */
+    .auth-card {
+        background: white;
+        border-radius: var(--radius-xl);
+        padding: 3rem;
+        box-shadow: var(--shadow-xl);
+        border: 1px solid var(--cloud-200);
+        width: 100%;
+    }
+    
+    /* En-tête auth */
+    .auth-header {
+        text-align: center;
+        margin-bottom: 2.5rem;
+    }
+    
+    .auth-logo {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 1rem;
+        margin-bottom: 1.5rem;
+    }
+    
+    .logo-icon {
+        width: 50px;
+        height: 50px;
+        background: linear-gradient(135deg, var(--primary-500) 0%, var(--accent-indigo) 100%);
+        border-radius: var(--radius);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-size: 1.5rem;
+    }
+    
+    .logo-text {
+        font-size: 2rem;
+        font-weight: 800;
+        background: linear-gradient(135deg, var(--primary-600) 0%, var(--accent-indigo) 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        margin: 0;
+    }
+    
+    .auth-title {
+        margin: 0 0 0.75rem 0;
+        color: var(--cloud-900);
+        font-size: 1.8rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.75rem;
+    }
+    
+    .auth-subtitle {
+        margin: 0;
+        color: var(--cloud-600);
+        font-size: 1.1rem;
+    }
+    
+    /* Formulaire */
+    .auth-form {
+        margin-top: 2rem;
+    }
+    
+    .form-group {
+        margin-bottom: 1.5rem;
+    }
+    
+    .form-label {
+        display: block;
+        margin-bottom: 0.75rem;
+        font-weight: 600;
+        color: var(--cloud-800);
+        font-size: 1rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+    
+    .form-label i {
+        color: var(--primary-500);
+        width: 20px;
+    }
+    
+    .form-control {
+        width: 100%;
+        padding: 1rem 1.25rem;
+        border: 1px solid var(--cloud-300);
+        border-radius: var(--radius);
+        font-size: 1rem;
+        transition: all var(--transition);
+        background: white;
+    }
+    
+    .form-control:focus {
+        outline: none;
+        border-color: var(--primary-400);
+        box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+    }
+    
+    .form-control::placeholder {
+        color: var(--cloud-400);
+    }
+    
+    /* Bouton de soumission */
+    .auth-submit-btn {
+        width: 100%;
+        padding: 1rem 2rem;
+        font-size: 1.1rem;
+        font-weight: 600;
+        border-radius: var(--radius-lg);
+        margin-top: 1rem;
+        background: linear-gradient(135deg, var(--primary-500) 0%, var(--primary-600) 100%);
+        border: none;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.75rem;
+        cursor: pointer;
+        transition: all var(--transition);
+    }
+    
+    .auth-submit-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: var(--shadow-lg);
+    }
+    
+    /* Divider */
+    .auth-divider {
+        display: flex;
+        align-items: center;
+        margin: 2rem 0;
+        color: var(--cloud-400);
+    }
+    
+    .auth-divider::before,
+    .auth-divider::after {
+        content: '';
+        flex: 1;
+        height: 1px;
+        background: var(--cloud-300);
+    }
+    
+    .auth-divider span {
+        padding: 0 1rem;
+        font-size: 0.9rem;
+    }
+    
+    /* Liens */
+    .auth-links {
+        text-align: center;
+        margin-top: 2rem;
+    }
+    
+    .auth-links p {
+        margin: 1rem 0;
+        color: var(--cloud-600);
+    }
+    
+    .auth-link {
+        color: var(--primary-600);
+        text-decoration: none;
+        font-weight: 600;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        transition: color var(--transition);
+    }
+    
+    .auth-link:hover {
+        color: var(--primary-800);
+        text-decoration: underline;
+    }
+    
+    /* Responsive */
+    @media (max-width: 768px) {
+        .auth-page-container {
+            padding: 1rem;
+        }
+        
+        .auth-card {
+            padding: 2rem;
+        }
+    }
+    
+    @media (max-width: 480px) {
+        .auth-card {
+            padding: 1.5rem;
+        }
+        
+        .auth-title {
+            font-size: 1.5rem;
+        }
+        
+        .auth-subtitle {
+            font-size: 1rem;
+        }
+        
+        .logo-text {
+            font-size: 1.75rem;
+        }
+        
+        .logo-icon {
+            width: 40px;
+            height: 40px;
+            font-size: 1.25rem;
+        }
+    }
+</style>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const form = document.querySelector('.auth-form');
+        const submitBtn = form.querySelector('.auth-submit-btn');
+        
+        // Validation du formulaire
+        form.addEventListener('submit', function(e) {
+            const email = document.getElementById('email').value.trim();
+            const password = document.getElementById('password').value.trim();
+            
+            // Validation basique
+            if (!email || !password) {
+                e.preventDefault();
+                alert('Veuillez remplir tous les champs.');
+                return false;
+            }
+            
+            // Validation email simple
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            if (!emailRegex.test(email)) {
+                e.preventDefault();
+                alert('Veuillez entrer une adresse email valide.');
+                return false;
+            }
+            
+            // État de chargement
+            const originalHTML = submitBtn.innerHTML;
+            submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Connexion en cours...';
+            submitBtn.disabled = true;
+            
+            // Réactiver après 3 secondes en cas d'erreur
+            setTimeout(() => {
+                submitBtn.innerHTML = originalHTML;
+                submitBtn.disabled = false;
+            }, 3000);
+            
+            return true;
+        });
+        
+        // Effet au focus
+        const inputs = form.querySelectorAll('.form-control');
+        inputs.forEach(input => {
+            input.addEventListener('focus', function() {
+                this.style.borderColor = 'var(--primary-400)';
+                this.style.boxShadow = '0 0 0 3px rgba(59, 130, 246, 0.1)';
+                this.parentElement.style.transform = 'translateY(-2px)';
+            });
+            
+            input.addEventListener('blur', function() {
+                this.style.borderColor = 'var(--cloud-300)';
+                this.style.boxShadow = 'none';
+                this.parentElement.style.transform = 'translateY(0)';
+            });
+        });
+        
+        // REMOVED: Toggle password visibility functionality
+        // L'œil a été complètement supprimé comme demandé
+    });
+</script>
+{% endblock %}

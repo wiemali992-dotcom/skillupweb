@@ -1,0 +1,626 @@
+{% extends "base.html" %}
+
+{% block title %}Inscription - SkillUp{% endblock %}
+
+{% block content %}
+<div class="fade-in">
+    <div class="auth-page-container">
+        <div class="auth-card">
+            <!-- Logo et titre -->
+            <div class="auth-header">
+                <div class="auth-logo">
+                    <h1 class="logo-text">Skill<span>Up</span></h1>
+                </div>
+                <h2 class="auth-title">
+                    <i class="fas fa-user-plus"></i>
+                    Inscription
+                </h2>
+                <p class="auth-subtitle">Rejoignez notre communauté d'étudiants solidaires</p>
+            </div>
+            
+            <!-- Formulaire -->
+            <form method="POST" class="auth-form" id="registerForm">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="nom" class="form-label">
+                            <i class="fas fa-user"></i>
+                            Nom *
+                        </label>
+                        <input type="text" id="nom" name="nom" class="form-control" 
+                               placeholder="Votre nom" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="prenom" class="form-label">
+                            <i class="fas fa-user"></i>
+                            Prénom *
+                        </label>
+                        <input type="text" id="prenom" name="prenom" class="form-control" 
+                               placeholder="Votre prénom" required>
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label for="email" class="form-label">
+                        <i class="fas fa-envelope"></i>
+                        Adresse email *
+                    </label>
+                    <input type="email" id="email" name="email" class="form-control" 
+                           placeholder="votre@email.com" required>
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="password" class="form-label">
+                            <i class="fas fa-lock"></i>
+                            Mot de passe *
+                        </label>
+                        <input type="password" id="password" name="password" class="form-control password-field" 
+                               placeholder="Minimum 6 caractères" required minlength="6">
+                        <div class="password-strength">
+                            <div class="strength-bar"></div>
+                            <div class="strength-label">Force du mot de passe</div>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="confirm_password" class="form-label">
+                            <i class="fas fa-lock"></i>
+                            Confirmer le mot de passe *
+                        </label>
+                        <input type="password" id="confirm_password" name="confirm_password" class="form-control password-field" 
+                               placeholder="Retapez votre mot de passe" required>
+                        <div class="password-match">
+                            <i class="fas fa-check"></i>
+                            <span>Les mots de passe correspondent</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="filiere" class="form-label">
+                            <i class="fas fa-graduation-cap"></i>
+                            Filière (optionnel)
+                        </label>
+                        <input type="text" id="filiere" name="filiere" class="form-control" 
+                               placeholder="Ex: Informatique, Gestion...">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="annee_etude" class="form-label">
+                            <i class="fas fa-calendar-alt"></i>
+                            Année d'étude 
+                        </label>
+                        <select id="annee_etude" name="annee_etude" class="form-control">
+                            <option value="">-- Sélectionnez --</option>
+                            <option value="1">1ère année</option>
+                            <option value="2">2ème année</option>
+                            <option value="3">3ème année</option>
+                            <option value="4">4ème année</option>
+                            <option value="5">5ème année et plus</option>
+                        </select>
+                    </div>
+                </div>
+                
+               
+                <button type="submit" class="btn btn-primary auth-submit-btn">
+                    <i class="fas fa-user-plus"></i>
+                    S'inscrire
+                </button>
+                
+                <div class="auth-divider">
+                    <span>ou</span>
+                </div>
+                
+                <div class="auth-links">
+                    <p>
+                        Déjà un compte ? 
+                        <a href="{{ url_for('login') }}" class="auth-link">
+                            <i class="fas fa-sign-in-alt"></i>
+                            Connectez-vous
+                        </a>
+                    </p>
+                    <p>
+                        <a href="{{ url_for('index') }}" class="auth-link">
+                            <i class="fas fa-home"></i>
+                            Retour à l'accueil
+                        </a>
+                    </p>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<style>
+    /* Conteneur principal - Ajusté pour un meilleur centrage */
+    .auth-page-container {
+        max-width: 850px;
+        margin: 0 auto;
+        padding: 2rem;
+        min-height: calc(100vh - 200px);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    
+    /* Carte d'authentification - Centrage amélioré */
+    .auth-card {
+        background: white;
+        border-radius: var(--radius-xl);
+        padding: 3.5rem 4rem; /* Plus de padding horizontal */
+        box-shadow: var(--shadow-xl);
+        border: 1px solid var(--cloud-200);
+        width: 100%;
+        margin: 0 auto;
+    }
+    
+    /* En-tête auth - Ajusté pour centrage */
+    .auth-header {
+        text-align: center;
+        margin-bottom: 3rem;
+        padding: 0 1rem; /* Padding pour éviter que le titre touche les bords */
+    }
+    
+    .auth-logo {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 1rem;
+        margin-bottom: 2rem;
+    }
+    
+    .logo-icon {
+        width: 50px;
+        height: 50px;
+        background: linear-gradient(135deg, var(--primary-500) 0%, var(--accent-indigo) 100%);
+        border-radius: var(--radius);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-size: 1.5rem;
+    }
+    
+    .logo-text {
+        font-size: 2.5rem; /* Légèrement plus grand pour mieux correspondre à la largeur */
+        font-weight: 800;
+        background: linear-gradient(135deg, var(--primary-600) 0%, var(--accent-indigo) 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        margin: 0;
+        letter-spacing: -0.5px; /* Ajustement de l'espacement des lettres */
+    }
+    
+    .auth-title {
+        margin: 0 0 1rem 0;
+        color: var(--cloud-900);
+        font-size: 2rem; /* Légèrement plus grand */
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.75rem;
+    }
+    
+    .auth-subtitle {
+        margin: 0;
+        color: var(--cloud-600);
+        font-size: 1.2rem; /* Légèrement plus grand */
+        max-width: 600px; /* Limite la largeur pour un meilleur centrage */
+        margin-left: auto;
+        margin-right: auto;
+        line-height: 1.5;
+    }
+    
+    /* Formulaire - Ajusté pour centrage */
+    .auth-form {
+        margin-top: 2.5rem;
+        max-width: 100%; /* S'assure qu'il ne dépasse pas */
+    }
+    
+    .form-row {
+        display: flex;
+        gap: 2rem;
+        margin-bottom: 1.8rem;
+    }
+    
+    .form-row .form-group {
+        flex: 1;
+        min-width: 0; /* Empêche le débordement */
+    }
+    
+    .form-group {
+        margin-bottom: 1.8rem;
+    }
+    
+    .form-label {
+        display: block;
+        margin-bottom: 0.75rem;
+        font-weight: 600;
+        color: var(--cloud-800);
+        font-size: 1rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+    
+    .form-label i {
+        color: var(--primary-500);
+        width: 20px;
+    }
+    
+    .form-control {
+        width: 100%;
+        padding: 1rem 1.25rem;
+        border: 1px solid var(--cloud-300);
+        border-radius: var(--radius);
+        font-size: 1rem;
+        transition: all var(--transition);
+        background: white;
+        box-sizing: border-box; /* Important pour inclure padding dans la largeur */
+    }
+    
+    .form-control:focus {
+        outline: none;
+        border-color: var(--primary-400);
+        box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+    }
+    
+    .form-control::placeholder {
+        color: var(--cloud-400);
+    }
+    
+    /* Style spécifique pour les champs password */
+    .password-field {
+        letter-spacing: 0.1em;
+    }
+    
+    select.form-control {
+        cursor: pointer;
+        appearance: none;
+        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3E%3Cpath stroke='%2364748b' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3E%3C/svg%3E");
+        background-repeat: no-repeat;
+        background-position: right 1rem center;
+        background-size: 1.5em;
+        padding-right: 3rem;
+    }
+    
+    /* Password strength */
+    .password-strength {
+        margin-top: 0.75rem;
+    }
+    
+    .strength-bar {
+        height: 4px;
+        width: 100%;
+        background: var(--cloud-300);
+        border-radius: 2px;
+        overflow: hidden;
+        margin-bottom: 0.25rem;
+        position: relative;
+    }
+    
+    .strength-bar::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        height: 100%;
+        width: 0;
+        background: var(--accent-rose);
+        border-radius: 2px;
+        transition: width 0.3s ease, background-color 0.3s ease;
+    }
+    
+    .strength-label {
+        font-size: 0.8rem;
+        color: var(--cloud-500);
+        text-align: left;
+    }
+    
+    /* Password match */
+    .password-match {
+        display: none;
+        align-items: center;
+        gap: 0.5rem;
+        margin-top: 0.75rem;
+        font-size: 0.85rem;
+        color: var(--accent-emerald);
+    }
+    
+    .password-match i {
+        font-size: 0.9rem;
+    }
+    
+    /* Bouton de soumission */
+    .auth-submit-btn {
+        width: 100%;
+        padding: 1.1rem 2rem;
+        font-size: 1.1rem;
+        font-weight: 600;
+        border-radius: var(--radius-lg);
+        margin-top: 1.5rem;
+        background: linear-gradient(135deg, var(--primary-500) 0%, var(--primary-600) 100%);
+        border: none;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.75rem;
+        transition: all 0.3s ease;
+    }
+    
+    .auth-submit-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+    }
+    
+    /* Divider */
+    .auth-divider {
+        display: flex;
+        align-items: center;
+        margin: 2.5rem 0;
+        color: var(--cloud-400);
+    }
+    
+    .auth-divider::before,
+    .auth-divider::after {
+        content: '';
+        flex: 1;
+        height: 1px;
+        background: var(--cloud-300);
+    }
+    
+    .auth-divider span {
+        padding: 0 1rem;
+        font-size: 0.9rem;
+    }
+    
+    /* Liens */
+    .auth-links {
+        text-align: center;
+        margin-top: 2.5rem;
+        padding: 0 1rem;
+    }
+    
+    .auth-links p {
+        margin: 1.25rem 0;
+        color: var(--cloud-600);
+    }
+    
+    .auth-link {
+        color: var(--primary-600);
+        text-decoration: none;
+        font-weight: 600;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        transition: color var(--transition);
+    }
+    
+    .auth-link:hover {
+        color: var(--primary-800);
+        text-decoration: underline;
+    }
+    
+    /* Responsive */
+    @media (max-width: 768px) {
+        .auth-page-container {
+            padding: 1.5rem;
+            max-width: 95%;
+        }
+        
+        .auth-card {
+            padding: 2.5rem 2rem;
+        }
+        
+        .form-row {
+            flex-direction: column;
+            gap: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+        
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+        
+        .auth-title {
+            font-size: 1.8rem;
+        }
+        
+        .auth-subtitle {
+            font-size: 1.1rem;
+            max-width: 90%;
+        }
+        
+        .logo-text {
+            font-size: 2.2rem;
+        }
+    }
+    
+    @media (max-width: 480px) {
+        .auth-card {
+            padding: 2rem 1.5rem;
+        }
+        
+        .auth-header {
+            margin-bottom: 2rem;
+            padding: 0;
+        }
+        
+        .auth-logo {
+            margin-bottom: 1.5rem;
+        }
+        
+        .logo-text {
+            font-size: 2rem;
+        }
+        
+        .auth-title {
+            font-size: 1.6rem;
+        }
+        
+        .auth-subtitle {
+            font-size: 1rem;
+        }
+        
+        .form-control {
+            padding: 0.9rem 1rem;
+        }
+    }
+</style>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const form = document.getElementById('registerForm');
+        const passwordInput = document.getElementById('password');
+        const confirmPasswordInput = document.getElementById('confirm_password');
+        const passwordMatchDiv = document.querySelector('.password-match');
+        const strengthBar = document.querySelector('.strength-bar');
+        const strengthLabel = document.querySelector('.strength-label');
+        const submitBtn = form.querySelector('.auth-submit-btn');
+        
+        // Password strength checker
+        function checkPasswordStrength(password) {
+            let strength = 0;
+            
+            // Length check
+            if (password.length >= 8) strength += 1;
+            if (password.length >= 12) strength += 1;
+            
+            // Character variety checks
+            if (/[a-z]/.test(password)) strength += 1;
+            if (/[A-Z]/.test(password)) strength += 1;
+            if (/[0-9]/.test(password)) strength += 1;
+            if (/[^a-zA-Z0-9]/.test(password)) strength += 1;
+            
+            // Calculate percentage
+            const percentage = (strength / 6) * 100;
+            
+            // Update strength bar
+            const bar = strengthBar;
+            bar.style.setProperty('--strength-width', percentage + '%');
+            
+            // Update color and label
+            if (percentage < 30) {
+                bar.style.backgroundColor = 'var(--accent-rose)';
+                strengthLabel.textContent = 'Faible';
+                bar.style.setProperty('--strength-color', 'var(--accent-rose)');
+            } else if (percentage < 70) {
+                bar.style.backgroundColor = 'var(--accent-amber)';
+                strengthLabel.textContent = 'Moyen';
+                bar.style.setProperty('--strength-color', 'var(--accent-amber)');
+            } else {
+                bar.style.backgroundColor = 'var(--accent-emerald)';
+                strengthLabel.textContent = 'Fort';
+                bar.style.setProperty('--strength-color', 'var(--accent-emerald)');
+            }
+            
+            return percentage;
+        }
+        
+        // Password match checker
+        function checkPasswordMatch() {
+            const password = passwordInput.value;
+            const confirmPassword = confirmPasswordInput.value;
+            
+            if (password && confirmPassword) {
+                if (password === confirmPassword) {
+                    passwordMatchDiv.style.display = 'flex';
+                    confirmPasswordInput.style.borderColor = 'var(--accent-emerald)';
+                    return true;
+                } else {
+                    passwordMatchDiv.style.display = 'none';
+                    confirmPasswordInput.style.borderColor = 'var(--accent-rose)';
+                    return false;
+                }
+            }
+            return null;
+        }
+        
+        // Event listeners
+        passwordInput.addEventListener('input', function() {
+            checkPasswordStrength(this.value);
+            checkPasswordMatch();
+        });
+        
+        confirmPasswordInput.addEventListener('input', checkPasswordMatch);
+        
+        // Form validation
+        form.addEventListener('submit', function(e) {
+            const nom = document.getElementById('nom').value.trim();
+            const prenom = document.getElementById('prenom').value.trim();
+            const email = document.getElementById('email').value.trim();
+            const password = passwordInput.value;
+            
+            // Basic validation
+            if (!nom || !prenom || !email || !password) {
+                e.preventDefault();
+                alert('Veuillez remplir tous les champs obligatoires.');
+                return false;
+            }
+            
+            // Email validation
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            if (!emailRegex.test(email)) {
+                e.preventDefault();
+                alert('Veuillez entrer une adresse email valide.');
+                return false;
+            }
+            
+            // Password length
+            if (password.length < 6) {
+                e.preventDefault();
+                alert('Le mot de passe doit contenir au moins 6 caractères.');
+                return false;
+            }
+            
+            // Password match
+            if (!checkPasswordMatch()) {
+                e.preventDefault();
+                alert('Les mots de passe ne correspondent pas.');
+                return false;
+            }
+            
+            // Password strength warning (optional)
+            const strength = checkPasswordStrength(password);
+            if (strength < 30) {
+                if (!confirm('Votre mot de passe est faible. Êtes-vous sûr de vouloir continuer ?')) {
+                    e.preventDefault();
+                    return false;
+                }
+            }
+            
+            // Loading state
+            const originalHTML = submitBtn.innerHTML;
+            submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Création du compte...';
+            submitBtn.disabled = true;
+            
+            // Re-enable after 3 seconds in case of error
+            setTimeout(() => {
+                submitBtn.innerHTML = originalHTML;
+                submitBtn.disabled = false;
+            }, 3000);
+            
+            return true;
+        });
+        
+        // Focus effects
+        const inputs = form.querySelectorAll('.form-control');
+        inputs.forEach(input => {
+            input.addEventListener('focus', function() {
+                this.style.borderColor = 'var(--primary-400)';
+                this.style.boxShadow = '0 0 0 3px rgba(59, 130, 246, 0.1)';
+            });
+            
+            input.addEventListener('blur', function() {
+                this.style.borderColor = 'var(--cloud-300)';
+                this.style.boxShadow = 'none';
+            });
+        });
+        
+        // Auto-focus first field
+        document.getElementById('nom').focus();
+    });
+</script>
+{% endblock %}

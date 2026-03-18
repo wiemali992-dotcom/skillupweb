@@ -1,0 +1,1053 @@
+{% extends "base.html" %}
+
+{% block title %}Mes aides - SkillUp{% endblock %}
+
+{% block content %}
+<div class="fade-in">
+    <div class="my-helps-container">
+        <!-- Header -->
+        <div class="my-helps-header">
+            <div class="header-content">
+                <h1 class="text-gradient">
+                    <i class="fas fa-hands-helping"></i>
+                    Mes transactions d'aide
+                </h1>
+                <p class="header-subtitle">Suivez vos demandes d'aide et les aides que vous avez fournies</p>
+            </div>
+            
+            <div class="user-stats">
+                <div class="stat-card">
+                    <div class="stat-icon">
+                        <i class="fas fa-trophy"></i>
+                    </div>
+                    <div class="stat-content">
+                        <div class="stat-value">{{ user_score|default(0) }}</div>
+                        <div class="stat-label">Points</div>
+                    </div>
+                </div>
+                
+               
+                
+               
+            </div>
+        </div>
+
+        <!-- Badges -->
+        {% if badges %}
+        <div class="badges-section">
+            <div class="section-header">
+                <i class="fas fa-award section-icon"></i>
+                <h3>Mes badges</h3>
+            </div>
+            
+            <div class="badges-grid">
+                {% for badge in badges %}
+                    {% if badge.badge_type == 'helper_bronze' %}
+                        <div class="badge-card bronze">
+                            <div class="badge-icon">
+                                <i class="fas fa-medal"></i>
+                            </div>
+                            <div class="badge-content">
+                                <h4>Helper Bronze</h4>
+                                <p>Premiers pas dans l'entraide</p>
+                            </div>
+                        </div>
+                    {% elif badge.badge_type == 'helper_silver' %}
+                        <div class="badge-card silver">
+                            <div class="badge-icon">
+                                <i class="fas fa-medal"></i>
+                            </div>
+                            <div class="badge-content">
+                                <h4>Helper Silver</h4>
+                                <p>Aide active et régulière</p>
+                            </div>
+                        </div>
+                    {% elif badge.badge_type == 'helper_gold' %}
+                        <div class="badge-card gold">
+                            <div class="badge-icon">
+                                <i class="fas fa-medal"></i>
+                            </div>
+                            <div class="badge-content">
+                                <h4>Helper Gold</h4>
+                                <p>Expert de l'entraide</p>
+                            </div>
+                        </div>
+                    {% endif %}
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Tabs -->
+        <div class="tabs-container">
+            <div class="tabs">
+                <button class="tab-btn active" data-tab="received">
+                    <i class="fas fa-download"></i>
+                    Aides reçues
+                </button>
+                <button class="tab-btn" data-tab="given">
+                    <i class="fas fa-upload"></i>
+                    Aides fournies
+                </button>
+            </div>
+        </div>
+
+        <!-- Received Helps Tab -->
+        <div id="received-tab" class="tab-content active">
+            <div class="tab-header">
+                <h3>
+                    <i class="fas fa-download"></i>
+                    Aides que j'ai demandées
+                </h3>
+                <span class="tab-count">{{ helps_received|length }} demande(s)</span>
+            </div>
+            
+            {% if helps_received %}
+                <div class="helps-list">
+                    {% for help in helps_received %}
+                    <div class="help-list-item status-{{ help.status }}">
+                        <div class="help-status-indicator"></div>
+                        
+                        <div class="help-list-content">
+                            <div class="help-list-header">
+                                <div class="help-title-section">
+                                    <div class="help-skill">
+                                        <i class="fas fa-tag"></i>
+                                        <span>{{ help.skill }}</span>
+                                    </div>
+                                    <div class="help-status">
+                                        <span class="status-badge status-{{ help.status }}">
+                                            {{ help.status|upper }}
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="help-description">
+                                <p>{{ help.description }}</p>
+                            </div>
+                            
+                            <div class="help-details-grid">
+                                <div class="detail-item">
+                                    <div class="detail-icon">
+                                        <i class="fas fa-user-circle"></i>
+                                    </div>
+                                    <div class="detail-content">
+                                        <div class="detail-label">Aidant</div>
+                                        <div class="detail-value">{{ help.helper_prenom }} {{ help.helper_nom }}</div>
+                                    </div>
+                                </div>
+                                
+                                <div class="detail-item">
+                                    <div class="detail-icon">
+                                        <i class="fas fa-calendar"></i>
+                                    </div>
+                                    <div class="detail-content">
+                                        <div class="detail-label">Demandé le</div>
+                                        <div class="detail-value">{{ help.requested_at.strftime('%d/%m/%Y') }}</div>
+                                    </div>
+                                </div>
+                                
+                                {% if help.completed_at %}
+                                <div class="detail-item">
+                                    <div class="detail-icon">
+                                        <i class="fas fa-check-circle"></i>
+                                    </div>
+                                    <div class="detail-content">
+                                        <div class="detail-label">Terminé le</div>
+                                        <div class="detail-value">{{ help.completed_at.strftime('%d/%m/%Y') }}</div>
+                                    </div>
+                                </div>
+                                {% endif %}
+                            </div>
+                            
+                            <div class="help-actions">
+                                {% if help.status == 'pending' %}
+                                    <div class="action-info">
+                                        <i class="fas fa-clock"></i>
+                                        <span>En attente que l'aidant termine</span>
+                                    </div>
+                                {% elif help.status == 'completed' %}
+                                    <a href="{{ url_for('confirm_help', transaction_id=help.id) }}" 
+                                       class="btn btn-primary action-btn">
+                                        <i class="fas fa-star"></i>
+                                        Confirmer et noter
+                                    </a>
+                                {% elif help.status == 'confirmed' %}
+                                    <div class="rating-display">
+                                        <div class="stars">
+                                            {% for i in range(5) %}
+                                                <i class="fas fa-star {% if i < help.rating %}active{% endif %}"></i>
+                                            {% endfor %}
+                                        </div>
+                                        {% if help.feedback %}
+                                        <div class="feedback">
+                                            <p>"{{ help.feedback }}"</p>
+                                        </div>
+                                        {% endif %}
+                                    </div>
+                                {% elif help.status == 'cancelled' %}
+                                    <div class="action-info cancelled">
+                                        <i class="fas fa-times-circle"></i>
+                                        <span>Transaction annulée</span>
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <div class="empty-state">
+                    <div class="empty-icon">
+                        <i class="fas fa-inbox"></i>
+                    </div>
+                    <h4>Pas encore d'aides reçues</h4>
+                    <p>Demandez de l'aide à d'autres étudiants pour apparaître ici</p>
+                    <a href="{{ url_for('search') }}" class="btn btn-secondary">
+                        <i class="fas fa-search"></i>
+                        Trouver des aidants
+                    </a>
+                </div>
+            {% endif %}
+        </div>
+
+        <!-- Given Helps Tab -->
+        <div id="given-tab" class="tab-content">
+            <div class="tab-header">
+                <h3>
+                    <i class="fas fa-upload"></i>
+                    Aides que j'ai fournies
+                </h3>
+                <span class="tab-count">{{ helps_given|length }} aide(s)</span>
+            </div>
+            
+            {% if helps_given %}
+                <div class="helps-list">
+                    {% for help in helps_given %}
+                    <div class="help-list-item status-{{ help.status }}">
+                        <div class="help-status-indicator"></div>
+                        
+                        <div class="help-list-content">
+                            <div class="help-list-header">
+                                <div class="help-title-section">
+                                    <div class="help-skill">
+                                        <i class="fas fa-tag"></i>
+                                        <span>{{ help.skill }}</span>
+                                    </div>
+                                    <div class="help-status">
+                                        <span class="status-badge status-{{ help.status }}">
+                                            {{ help.status|upper }}
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="help-description">
+                                <p>{{ help.description }}</p>
+                            </div>
+                            
+                            <div class="help-details-grid">
+                                <div class="detail-item">
+                                    <div class="detail-icon">
+                                        <i class="fas fa-user-circle"></i>
+                                    </div>
+                                    <div class="detail-content">
+                                        <div class="detail-label">Demandeur</div>
+                                        <div class="detail-value">{{ help.requester_prenom }} {{ help.requester_nom }}</div>
+                                    </div>
+                                </div>
+                                
+                                <div class="detail-item">
+                                    <div class="detail-icon">
+                                        <i class="fas fa-calendar"></i>
+                                    </div>
+                                    <div class="detail-content">
+                                        <div class="detail-label">Demandé le</div>
+                                        <div class="detail-value">{{ help.requested_at.strftime('%d/%m/%Y') }}</div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="help-actions">
+                                {% if help.status == 'pending' %}
+                                    <form action="{{ url_for('complete_help', transaction_id=help.id) }}" method="POST" class="action-form">
+                                        <button type="submit" class="btn btn-primary action-btn">
+                                            <i class="fas fa-check-circle"></i>
+                                            Marquer comme terminé
+                                        </button>
+                                    </form>
+                                {% elif help.status == 'completed' %}
+                                    <div class="action-info">
+                                        <i class="fas fa-clock"></i>
+                                        <span>En attente de confirmation</span>
+                                    </div>
+                                {% elif help.status == 'confirmed' %}
+                                    <div class="rating-display">
+                                        <div class="rating-header">
+                                            <div class="stars">
+                                                {% for i in range(5) %}
+                                                    <i class="fas fa-star {% if i < help.rating %}active{% endif %}"></i>
+                                                {% endfor %}
+                                            </div>
+                                            <span class="points-earned">+{{ help.rating * 10 }} points</span>
+                                        </div>
+                                        {% if help.feedback %}
+                                        <div class="feedback">
+                                            <p>"{{ help.feedback }}"</p>
+                                        </div>
+                                        {% endif %}
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <div class="empty-state">
+                    <div class="empty-icon">
+                        <i class="fas fa-hands"></i>
+                    </div>
+                    <h4>Pas encore d'aides fournies</h4>
+                    <p>Les autres utilisateurs peuvent vous demander de l'aide depuis votre profil</p>
+                    <a href="{{ url_for('myprofile') }}" class="btn btn-secondary">
+                        <i class="fas fa-user"></i>
+                        Voir mon profil
+                    </a>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<style>
+    /* Container */
+    .my-helps-container {
+        max-width: 1200px;
+        margin: 0 auto;
+    }
+
+    /* Header */
+    .my-helps-header {
+        margin-bottom: 3rem;
+    }
+
+    .header-content {
+        margin-bottom: 2rem;
+    }
+
+    .header-subtitle {
+        color: var(--cloud-600);
+        font-size: 1.1rem;
+        margin-top: 0.5rem;
+    }
+
+    /* User Stats */
+    .user-stats {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 1.5rem;
+        margin-top: 2rem;
+    }
+
+    .stat-card {
+        background: white;
+        border-radius: var(--radius-xl);
+        padding: 1.5rem;
+        display: flex;
+        align-items: center;
+        gap: 1.5rem;
+        box-shadow: var(--shadow);
+        border: 1px solid var(--cloud-200);
+        transition: all var(--transition);
+    }
+
+    .stat-card:hover {
+        transform: translateY(-5px);
+        box-shadow: var(--shadow-lg);
+        border-color: var(--primary-300);
+    }
+
+    .stat-icon {
+        width: 60px;
+        height: 60px;
+        border-radius: var(--radius-lg);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.5rem;
+    }
+
+    .stat-card:nth-child(1) .stat-icon {
+        background: linear-gradient(135deg, var(--accent-amber) 0%, #d97706 100%);
+        color: white;
+    }
+
+    .stat-card:nth-child(2) .stat-icon {
+        background: linear-gradient(135deg, var(--primary-500) 0%, var(--primary-600) 100%);
+        color: white;
+    }
+
+    .stat-card:nth-child(3) .stat-icon {
+        background: linear-gradient(135deg, var(--accent-emerald) 0%, var(--accent-teal) 100%);
+        color: white;
+    }
+
+    .stat-value {
+        font-size: 2rem;
+        font-weight: 800;
+        color: var(--cloud-900);
+        line-height: 1;
+    }
+
+    .stat-label {
+        color: var(--cloud-600);
+        font-size: 0.95rem;
+        margin-top: 0.25rem;
+    }
+
+    /* Badges Section */
+    .badges-section {
+        background: white;
+        border-radius: var(--radius-xl);
+        padding: 2rem;
+        margin-bottom: 2.5rem;
+        box-shadow: var(--shadow);
+        border: 1px solid var(--cloud-200);
+    }
+
+    .section-header {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        margin-bottom: 1.5rem;
+    }
+
+    .section-icon {
+        width: 50px;
+        height: 50px;
+        background: linear-gradient(135deg, var(--primary-400) 0%, var(--primary-500) 100%);
+        border-radius: var(--radius);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-size: 1.2rem;
+    }
+
+    .section-header h3 {
+        margin: 0;
+        color: var(--cloud-900);
+        font-size: 1.3rem;
+    }
+
+    .badges-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 1.5rem;
+    }
+
+    .badge-card {
+        border-radius: var(--radius-lg);
+        padding: 1.5rem;
+        display: flex;
+        align-items: center;
+        gap: 1.25rem;
+        transition: all var(--transition);
+    }
+
+    .badge-card.bronze {
+        background: linear-gradient(135deg, rgba(205, 127, 50, 0.1) 0%, rgba(184, 115, 51, 0.05) 100%);
+        border: 1px solid rgba(205, 127, 50, 0.2);
+    }
+
+    .badge-card.silver {
+        background: linear-gradient(135deg, rgba(192, 192, 192, 0.1) 0%, rgba(168, 168, 168, 0.05) 100%);
+        border: 1px solid rgba(192, 192, 192, 0.2);
+    }
+
+    .badge-card.gold {
+        background: linear-gradient(135deg, rgba(255, 215, 0, 0.1) 0%, rgba(255, 200, 0, 0.05) 100%);
+        border: 1px solid rgba(255, 215, 0, 0.2);
+    }
+
+    .badge-card:hover {
+        transform: translateY(-3px);
+        box-shadow: var(--shadow);
+    }
+
+    .badge-icon {
+        width: 60px;
+        height: 60px;
+        border-radius: var(--radius);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.8rem;
+    }
+
+    .badge-card.bronze .badge-icon {
+        background: linear-gradient(135deg, #CD7F32 0%, #b87333 100%);
+        color: white;
+    }
+
+    .badge-card.silver .badge-icon {
+        background: linear-gradient(135deg, #C0C0C0 0%, #a8a8a8 100%);
+        color: #333;
+    }
+
+    .badge-card.gold .badge-icon {
+        background: linear-gradient(135deg, #FFD700 0%, #ffc800 100%);
+        color: #333;
+    }
+
+    .badge-content h4 {
+        margin: 0 0 0.25rem 0;
+        color: var(--cloud-900);
+        font-size: 1.1rem;
+    }
+
+    .badge-content p {
+        margin: 0;
+        color: var(--cloud-600);
+        font-size: 0.9rem;
+    }
+
+    /* Tabs */
+    .tabs-container {
+        margin-bottom: 2rem;
+    }
+
+    .tabs {
+        display: flex;
+        gap: 0.5rem;
+        border-bottom: 1px solid var(--cloud-200);
+        padding-bottom: 0.5rem;
+    }
+
+    .tab-btn {
+        padding: 1rem 2rem;
+        border: none;
+        background: transparent;
+        color: var(--cloud-600);
+        font-size: 1rem;
+        font-weight: 600;
+        cursor: pointer;
+        border-radius: var(--radius);
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        transition: all var(--transition);
+    }
+
+    .tab-btn:hover {
+        background: var(--cloud-100);
+        color: var(--cloud-800);
+    }
+
+    .tab-btn.active {
+        background: var(--primary-500);
+        color: white;
+    }
+
+    /* Tab Content */
+    .tab-content {
+        display: none;
+    }
+
+    .tab-content.active {
+        display: block;
+    }
+
+    .tab-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 2rem;
+        padding-bottom: 1rem;
+        border-bottom: 1px solid var(--cloud-200);
+    }
+
+    .tab-header h3 {
+        margin: 0;
+        color: var(--cloud-900);
+        font-size: 1.5rem;
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+    }
+
+    .tab-count {
+        background: var(--cloud-100);
+        color: var(--cloud-700);
+        padding: 0.5rem 1rem;
+        border-radius: var(--radius);
+        font-size: 0.9rem;
+        font-weight: 500;
+    }
+
+    /* Liste verticale des aides */
+    .helps-list {
+        display: flex;
+        flex-direction: column;
+        gap: 1.5rem;
+    }
+
+    .help-list-item {
+        background: white;
+        border-radius: var(--radius-xl);
+        box-shadow: var(--shadow);
+        border: 1px solid var(--cloud-200);
+        transition: all var(--transition);
+        overflow: hidden;
+        position: relative;
+    }
+
+    .help-list-item:hover {
+        border-color: var(--primary-300);
+        box-shadow: var(--shadow-lg);
+    }
+
+    .help-status-indicator {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 6px;
+        height: 100%;
+    }
+
+    .status-pending .help-status-indicator {
+        background: var(--warning-color);
+    }
+
+    .status-completed .help-status-indicator {
+        background: var(--info-color);
+    }
+
+    .status-confirmed .help-status-indicator {
+        background: var(--success-color);
+    }
+
+    .status-cancelled .help-status-indicator {
+        background: var(--danger-color);
+    }
+
+    .help-list-content {
+        margin-left: 6px;
+        padding: 1.75rem;
+    }
+
+    .help-list-header {
+        margin-bottom: 1.5rem;
+    }
+
+    .help-title-section {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        flex-wrap: wrap;
+        gap: 1rem;
+    }
+
+    .help-skill {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        color: var(--primary-600);
+        font-weight: 600;
+        font-size: 1.2rem;
+    }
+
+    .help-skill i {
+        color: var(--primary-500);
+    }
+
+    .status-badge {
+        padding: 0.5rem 1rem;
+        border-radius: 20px;
+        font-size: 0.85rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    .status-badge.status-pending {
+        background: #fff3cd;
+        color: #856404;
+    }
+
+    .status-badge.status-completed {
+        background: #d1ecf1;
+        color: #0c5460;
+    }
+
+    .status-badge.status-confirmed {
+        background: #d4edda;
+        color: #155724;
+    }
+
+    .status-badge.status-cancelled {
+        background: #f8d7da;
+        color: #721c24;
+    }
+
+    .help-description {
+        margin-bottom: 1.5rem;
+        color: var(--cloud-700);
+        line-height: 1.6;
+    }
+
+    .help-description p {
+        margin: 0;
+        white-space: pre-wrap;
+        word-wrap: break-word;
+    }
+
+    .help-details-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 1.5rem;
+        margin-bottom: 1.5rem;
+        padding: 1.5rem;
+        background: var(--cloud-50);
+        border-radius: var(--radius);
+        border: 1px solid var(--cloud-200);
+    }
+
+    .detail-item {
+        display: flex;
+        align-items: flex-start;
+        gap: 1rem;
+    }
+
+    .detail-icon {
+        width: 40px;
+        height: 40px;
+        background: linear-gradient(135deg, var(--primary-400) 0%, var(--primary-500) 100%);
+        border-radius: var(--radius);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-size: 1rem;
+        flex-shrink: 0;
+    }
+
+    .detail-content {
+        flex: 1;
+    }
+
+    .detail-label {
+        display: block;
+        font-size: 0.85rem;
+        color: var(--cloud-600);
+        margin-bottom: 0.25rem;
+    }
+
+    .detail-value {
+        display: block;
+        font-weight: 500;
+        color: var(--cloud-800);
+        font-size: 1rem;
+    }
+
+    .help-actions {
+        margin-top: 1.5rem;
+        padding-top: 1.5rem;
+        border-top: 1px solid var(--cloud-200);
+    }
+
+    .action-info {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        color: var(--cloud-600);
+        font-size: 1rem;
+    }
+
+    .action-info i {
+        color: var(--accent-amber);
+    }
+
+    .action-info.cancelled i {
+        color: var(--accent-rose);
+    }
+
+    .action-btn {
+        padding: 0.875rem 1.5rem;
+        font-size: 0.95rem;
+        font-weight: 600;
+    }
+
+    .action-form {
+        width: 100%;
+    }
+
+    .rating-display {
+        background: linear-gradient(135deg, rgba(16, 185, 129, 0.05) 0%, rgba(16, 185, 129, 0.02) 100%);
+        padding: 1.25rem;
+        border-radius: var(--radius);
+        border: 1px solid rgba(16, 185, 129, 0.1);
+    }
+
+    .rating-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 1rem;
+    }
+
+    .stars {
+        display: flex;
+        gap: 0.25rem;
+    }
+
+    .stars i {
+        color: var(--cloud-300);
+        font-size: 1.2rem;
+    }
+
+    .stars i.active {
+        color: #FFD700;
+    }
+
+    .points-earned {
+        background: linear-gradient(135deg, var(--accent-emerald) 0%, var(--accent-teal) 100%);
+        color: white;
+        padding: 0.375rem 0.875rem;
+        border-radius: 20px;
+        font-size: 0.9rem;
+        font-weight: 600;
+    }
+
+    .feedback p {
+        margin: 0;
+        color: var(--cloud-700);
+        font-style: italic;
+        font-size: 0.95rem;
+        line-height: 1.5;
+    }
+
+    /* Empty State */
+    .empty-state {
+        text-align: center;
+        padding: 4rem 2rem;
+        background: var(--cloud-50);
+        border-radius: var(--radius-xl);
+        border: 2px dashed var(--cloud-300);
+    }
+
+    .empty-icon {
+        width: 80px;
+        height: 80px;
+        background: var(--cloud-200);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 1.5rem;
+        color: var(--cloud-500);
+        font-size: 2.5rem;
+    }
+
+    .empty-state h4 {
+        margin: 0 0 1rem 0;
+        color: var(--cloud-700);
+        font-size: 1.3rem;
+    }
+
+    .empty-state p {
+        margin: 0 0 2rem 0;
+        color: var(--cloud-600);
+        max-width: 400px;
+        margin-left: auto;
+        margin-right: auto;
+    }
+
+    /* Responsive */
+    @media (max-width: 1024px) {
+        .help-details-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+
+    @media (max-width: 768px) {
+        .my-helps-header {
+            text-align: center;
+        }
+
+        .user-stats {
+            grid-template-columns: 1fr;
+        }
+
+        .tabs {
+            flex-direction: column;
+        }
+
+        .tab-btn {
+            justify-content: center;
+        }
+
+        .tab-header {
+            flex-direction: column;
+            gap: 1rem;
+            text-align: center;
+        }
+
+        .help-title-section {
+            flex-direction: column;
+            align-items: flex-start;
+        }
+
+        .badges-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .rating-header {
+            flex-direction: column;
+            gap: 1rem;
+            align-items: flex-start;
+        }
+    }
+
+    @media (max-width: 480px) {
+        .help-list-content {
+            padding: 1.25rem;
+        }
+
+        .help-details-grid {
+            padding: 1rem;
+        }
+
+        .detail-item {
+            flex-direction: column;
+            text-align: center;
+        }
+
+        .detail-icon {
+            margin: 0 auto;
+        }
+    }
+</style>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Tab functionality
+        const tabBtns = document.querySelectorAll('.tab-btn');
+        const tabContents = document.querySelectorAll('.tab-content');
+
+        tabBtns.forEach(btn => {
+            btn.addEventListener('click', function() {
+                const tabId = this.getAttribute('data-tab');
+                
+                // Remove active class from all buttons and contents
+                tabBtns.forEach(b => b.classList.remove('active'));
+                tabContents.forEach(c => c.classList.remove('active'));
+                
+                // Add active class to clicked button and corresponding content
+                this.classList.add('active');
+                document.getElementById(`${tabId}-tab`).classList.add('active');
+                
+                // Store active tab in session storage
+                sessionStorage.setItem('activeHelpTab', tabId);
+            });
+        });
+
+        // Restore active tab from session storage
+        const activeTab = sessionStorage.getItem('activeHelpTab');
+        if (activeTab) {
+            const tabBtn = document.querySelector(`[data-tab="${activeTab}"]`);
+            if (tabBtn) {
+                tabBtn.click();
+            }
+        }
+
+        // Animate help items on load
+        const helpItems = document.querySelectorAll('.help-list-item');
+        helpItems.forEach((item, index) => {
+            item.style.opacity = '0';
+            item.style.transform = 'translateY(20px)';
+            
+            setTimeout(() => {
+                item.style.transition = 'all 0.5s ease';
+                item.style.opacity = '1';
+                item.style.transform = 'translateY(0)';
+            }, index * 100);
+        });
+
+        // Confirmation for completing help
+        const completeForms = document.querySelectorAll('.action-form');
+        completeForms.forEach(form => {
+            form.addEventListener('submit', function(e) {
+                if (!confirm('Êtes-vous sûr d\'avoir terminé cette aide ? Cette action ne peut pas être annulée.')) {
+                    e.preventDefault();
+                }
+            });
+        });
+
+        // Hover effects for items
+        helpItems.forEach(item => {
+            item.addEventListener('mouseenter', function() {
+                const statusIndicator = this.querySelector('.help-status-indicator');
+                if (statusIndicator) {
+                    statusIndicator.style.width = '10px';
+                    statusIndicator.style.transition = 'width 0.3s ease';
+                }
+            });
+
+            item.addEventListener('mouseleave', function() {
+                const statusIndicator = this.querySelector('.help-status-indicator');
+                if (statusIndicator) {
+                    statusIndicator.style.width = '6px';
+                }
+            });
+        });
+
+        // Function pour lire la suite des descriptions longues
+        const helpDescriptions = document.querySelectorAll('.help-description p');
+        helpDescriptions.forEach(description => {
+            if (description.textContent.length > 500) {
+                const originalText = description.textContent;
+                const truncatedText = originalText.substring(0, 500) + '...';
+                description.textContent = truncatedText;
+                
+                const readMoreBtn = document.createElement('button');
+                readMoreBtn.className = 'btn-read-more';
+                readMoreBtn.innerHTML = '<i class="fas fa-chevron-down"></i> Lire la suite';
+                readMoreBtn.style.cssText = `
+                    background: none;
+                    border: none;
+                    color: var(--primary-600);
+                    cursor: pointer;
+                    font-size: 0.9rem;
+                    font-weight: 600;
+                    display: flex;
+                    align-items: center;
+                    gap: 0.5rem;
+                    margin-top: 0.5rem;
+                    padding: 0.5rem 0;
+                `;
+                
+                readMoreBtn.addEventListener('click', function() {
+                    if (description.textContent.length < originalText.length) {
+                        description.textContent = originalText;
+                        readMoreBtn.innerHTML = '<i class="fas fa-chevron-up"></i> Réduire';
+                    } else {
+                        description.textContent = truncatedText;
+                        readMoreBtn.innerHTML = '<i class="fas fa-chevron-down"></i> Lire la suite';
+                    }
+                });
+                
+                description.parentNode.appendChild(readMoreBtn);
+            }
+        });
+
+        // Auto-refresh status (every minute)
+        setInterval(() => {
+            // In a real app, you would check for status updates via AJAX
+            console.log('Checking for status updates...');
+        }, 60000);
+    });
+</script>
+{% endblock %}

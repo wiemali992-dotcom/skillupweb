@@ -1,0 +1,699 @@
+{% extends "base.html" %}
+
+{% block title %}Accueil - SkillUp{% endblock %}
+
+{% block content %}
+<div class="fade-in">
+    <!-- Hero Section -->
+    <div class="hero-section" data-animate>
+        <div class="glass-effect" style="border-radius: var(--radius-xl); padding: 3rem; margin-bottom: 3rem; text-align: center;">
+            <h1 class="text-gradient" style="font-size: 3rem; margin-bottom: 1rem;">
+                 Bienvenue sur SkillUp
+            </h1>
+            <p style="font-size: 1.25rem; color: var(--cloud-600); max-width: 800px; margin: 0 auto 2rem;">
+                La plateforme où les étudiants s'entraident et partagent leurs compétences. 
+                Apprenez, enseignez, et grandissez ensemble.
+            </p>
+            
+            <!-- Search Bar - AGRANDIE -->
+            <div style="max-width: 700px; margin: 0 auto 3rem;">
+                <form action="{{ url_for('search') }}" method="GET" class="search-form" style="display: flex; gap: 0.5rem;">
+                    <div style="flex: 1; position: relative;">
+                        <input type="text" name="competence" 
+                               class="form-control" 
+                               style="padding-left: 3.5rem; border-radius: 50px; height: 65px; border: 2px solid var(--primary-200); font-size: 1.1rem;"
+                               placeholder="Rechercher une compétence (Excel, Python, Design...)" 
+                               value="{{ request.args.get('competence', '') }}">
+                        <i class="fas fa-search" style="position: absolute; left: 1.75rem; top: 50%; transform: translateY(-50%); color: var(--primary-400); font-size: 1.3rem;"></i>
+                    </div>
+                    <button type="submit" class="btn btn-primary" style="border-radius: 50px; padding: 0 2.5rem; height: 65px; min-width: 160px; font-size: 1.1rem;">
+                        <i class="fas fa-search"></i> Rechercher
+                    </button>
+                </form>
+            </div>
+            
+            <!-- Stats - SANS "AIDES RÉALISÉES" -->
+            <div class="stats-container" style="display: flex; justify-content: center; gap: 2rem; flex-wrap: wrap; max-width: 900px; margin: 0 auto;">
+                <div class="stat-card" style="background: white; border-radius: var(--radius-lg); padding: 2rem; box-shadow: var(--shadow); text-align: center; flex: 1; min-width: 200px;">
+                    <div style="width: 70px; height: 70px; background: linear-gradient(135deg, var(--primary-100) 0%, var(--primary-200) 100%); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 1rem;">
+                        <i class="fas fa-users" style="font-size: 1.8rem; color: var(--primary-600);"></i>
+                    </div>
+                    <div class="stat-number" style="font-size: 2.8rem; font-weight: 800; margin-bottom: 0.5rem; color: var(--primary-600);">
+                        {{ user_count }}
+                    </div>
+                    <div style="color: var(--cloud-600); font-weight: 500; font-size: 1.1rem;">
+                        Étudiants actifs
+                    </div>
+                </div>
+                
+                <div class="stat-card" style="background: white; border-radius: var(--radius-lg); padding: 2rem; box-shadow: var(--shadow); text-align: center; flex: 1; min-width: 200px;">
+                    <div style="width: 70px; height: 70px; background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 1rem;">
+                        <i class="fas fa-comments" style="font-size: 1.8rem; color: var(--accent-emerald);"></i>
+                    </div>
+                    <div class="stat-number" style="font-size: 2.8rem; font-weight: 800; margin-bottom: 0.5rem; color: var(--accent-emerald);">
+                        {{ post_count }}
+                    </div>
+                    <div style="color: var(--cloud-600); font-weight: 500; font-size: 1.1rem;">
+                        Publications
+                    </div>
+                </div>
+                
+                <div class="stat-card" style="background: white; border-radius: var(--radius-lg); padding: 2rem; box-shadow: var(--shadow); text-align: center; flex: 1; min-width: 200px;">
+                    <div style="width: 70px; height: 70px; background: linear-gradient(135deg, #e0e7ff 0%, #c7d2fe 100%); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 1rem;">
+                        <i class="fas fa-code" style="font-size: 1.8rem; color: var(--accent-indigo);"></i>
+                    </div>
+                    <div class="stat-number" style="font-size: 2.8rem; font-weight: 800; margin-bottom: 0.5rem; color: var(--accent-indigo);">
+                        {{ competence_count }}
+                    </div>
+                    <div style="color: var(--cloud-600); font-weight: 500; font-size: 1.1rem;">
+                        Compétences
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <div style="display: flex; gap: 2rem; margin-bottom: 3rem;">
+        <!-- Sidebar -->
+        <div style="flex: 1;">
+            <!-- Popular Skills -->
+            <div class="card" data-animate style="margin-bottom: 1.5rem; border: none; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);">
+                <div class="card-header" style="background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%); border-bottom: 1px solid #e2e8f0;">
+                    <h3 class="card-title" style="color: var(--primary-700);">
+                        <i class="fas fa-fire" style="color: var(--accent-amber);"></i>
+                        Compétences populaires
+                    </h3>
+                </div>
+                <div style="padding: 1rem;">
+                    {% for comp in competences[:10] %}
+                        <a href="{{ url_for('search') }}?competence={{ comp.competence }}" 
+                           style="display: block; text-decoration: none; color: var(--cloud-800); padding: 0.75rem 1rem; border-radius: 8px; background: #f8fafc; transition: all var(--transition); margin-bottom: 0.5rem; border: 1px solid #e2e8f0;">
+                            <div style="display: flex; justify-content: space-between; align-items: center;">
+                                <span style="font-weight: 500; display: flex; align-items: center; gap: 0.5rem;">
+                                    <i class="fas fa-hashtag" style="color: var(--primary-400); font-size: 0.875rem;"></i>
+                                    {{ comp.competence }}
+                                </span>
+                                <span style="background: linear-gradient(135deg, var(--primary-100) 0%, var(--primary-50) 100%); color: var(--primary-600); padding: 0.25rem 0.75rem; border-radius: 12px; font-size: 0.875rem; font-weight: 600; border: 1px solid var(--primary-200);">
+                                    {{ comp.count }}
+                                </span>
+                            </div>
+                        </a>
+                    {% endfor %}
+                </div>
+            </div>
+
+          
+        </div>
+
+        <!-- Publications -->
+        <div style="flex: 3;">
+            <!-- Header -->
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem; padding: 0 0.5rem;">
+                <h2 style="margin: 0; display: flex; align-items: center; gap: 0.75rem; color: var(--cloud-900);">
+                    <div style="width: 42px; height: 42px; background: linear-gradient(135deg, var(--primary-400) 0%, var(--primary-500) 100%); border-radius: 10px; display: flex; align-items: center; justify-content: center; color: white; box-shadow: 0 4px 10px rgba(59, 130, 246, 0.2);">
+                        <i class="fas fa-newspaper"></i>
+                    </div>
+                    Publications récentes
+                </h2>
+                {% if current_user.is_authenticated %}
+                    <a href="{{ url_for('create_post') }}" class="btn btn-primary" style="background: linear-gradient(135deg, var(--primary-500) 0%, var(--primary-600) 100%); border: none; border-radius: 10px; padding: 0.75rem 1.5rem; font-weight: 500; box-shadow: 0 4px 12px rgba(59, 130, 246, 0.2);">
+                        <i class="fas fa-plus"></i>
+                        Nouvelle publication
+                    </a>
+                {% endif %}
+            </div>
+
+            <!-- Publications Grid - STYLE MODIFIÉ POUR DES CADRES PLUS CLAIRS ET CHICS -->
+            {% if publications %}
+                <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 1.5rem;">
+                    {% for post in publications %}
+                    <!-- Carte avec style moderne et cadre clair -->
+                    <div class="publication-card-modern" data-animate style="
+                        background: white;
+                        border-radius: 12px;
+                        overflow: hidden;
+                        transition: all 0.3s ease;
+                        position: relative;
+                        border: 1px solid #e2e8f0;
+                        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.04);
+                        display: flex;
+                        flex-direction: column;
+                        height: 100%;
+                    ">
+                        <!-- Bordure colorée en haut - TOUJOURS BLEU (pas vert) -->
+                        <div style="
+                            height: 4px;
+                            width: 100%;
+                            background: linear-gradient(90deg, var(--primary-500) 0%, var(--primary-400) 100%);
+                        "></div>
+                        
+                        <!-- En-tête de la carte -->
+                        <div style="padding: 1.25rem 1.5rem 0.75rem 1.5rem;">
+                            <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 0.75rem;">
+                                <div style="display: flex; align-items: center; gap: 0.75rem;">
+                                    {% if post.type_publication == 'offre' %}
+                                        <div style="background: var(--primary-500); color: white; padding: 0.35rem 0.9rem; border-radius: 20px; font-size: 0.8rem; font-weight: 600; display: inline-flex; align-items: center; gap: 0.4rem; box-shadow: 0 2px 5px rgba(59, 130, 246, 0.2);">
+                                            <i class="fas fa-hand-holding-heart"></i> Offre
+                                        </div>
+                                    {% elif post.type_publication == 'demande' %}
+                                        <div style="background: var(--primary-500); color: white; padding: 0.35rem 0.9rem; border-radius: 20px; font-size: 0.8rem; font-weight: 600; display: inline-flex; align-items: center; gap: 0.4rem; box-shadow: 0 2px 5px rgba(59, 130, 246, 0.2);">
+                                            <i class="fas fa-question-circle"></i> Demande
+                                        </div>
+                                    {% else %}
+                                        <div style="background: var(--primary-500); color: white; padding: 0.35rem 0.9rem; border-radius: 20px; font-size: 0.8rem; font-weight: 600; display: inline-flex; align-items: center; gap: 0.4rem; box-shadow: 0 2px 5px rgba(59, 130, 246, 0.2);">
+                                            <i class="fas fa-bullhorn"></i> Annonce
+                                        </div>
+                                    {% endif %}
+                                    
+                                    <!-- Titre de la compétence principale -->
+                                    {% if post.tags and post.tags|length > 0 %}
+                                        <div style="color: var(--primary-500); font-size: 0.85rem; font-weight: 500; background: rgba(59, 130, 246, 0.05); padding: 0.25rem 0.75rem; border-radius: 12px; border: 1px solid rgba(59, 130, 246, 0.1);">
+                                            <i class="fas fa-tag" style="font-size: 0.7rem; margin-right: 0.25rem;"></i>{{ post.tags[0] }}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                                
+                                {% if current_user.is_authenticated and current_user.id == post.utilisateur_id %}
+                                    <div style="display: flex; gap: 0.5rem;">
+                                        <a href="{{ url_for('edit_post', post_id=post.id) }}" 
+                                           style="background: rgba(59, 130, 246, 0.05); border: 1px solid rgba(59, 130, 246, 0.1); color: var(--primary-500); cursor: pointer; padding: 0.4rem; border-radius: 8px; transition: all 0.2s; width: 32px; height: 32px; display: flex; align-items: center; justify-content: center;"
+                                           title="Modifier">
+                                            <i class="fas fa-edit" style="font-size: 0.85rem;"></i>
+                                        </a>
+                                        <form action="{{ url_for('delete_post', post_id=post.id) }}" 
+                                              method="POST" 
+                                              onsubmit="return confirm('Êtes-vous sûr de vouloir supprimer cette publication ?');"
+                                              style="margin: 0;">
+                                            <button type="submit" 
+                                                    style="background: rgba(239, 68, 68, 0.05); border: 1px solid rgba(239, 68, 68, 0.1); color: #ef4444; cursor: pointer; padding: 0.4rem; border-radius: 8px; transition: all 0.2s; width: 32px; height: 32px; display: flex; align-items: center; justify-content: center;"
+                                                    title="Supprimer">
+                                                <i class="fas fa-trash" style="font-size: 0.85rem;"></i>
+                                            </button>
+                                        </form>
+                                    </div>
+                                {% endif %}
+                            </div>
+                            
+                            <!-- Titre de la publication -->
+                            <h3 style="margin: 0.5rem 0 0.75rem 0; color: var(--cloud-900); font-size: 1.3rem; line-height: 1.4; font-weight: 600;">
+                                {{ post.titre }}
+                            </h3>
+                            
+                            <!-- Contenu principal -->
+                            <div style="margin-bottom: 1rem;">
+                                <p style="color: var(--cloud-700); line-height: 1.6; margin-bottom: 1rem; font-size: 0.95rem;">
+                                    {{ post.contenu|truncate(120) }}
+                                </p>
+                            </div>
+                            
+                            <!-- Tags supplémentaires -->
+                            {% if post.tags and post.tags|length > 1 %}
+                                <div style="display: flex; flex-wrap: wrap; gap: 0.5rem; margin-top: 0.5rem;">
+                                    {% for tag in post.tags[1:4] %}
+                                        <span style="
+                                            background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+                                            color: var(--cloud-700);
+                                            padding: 0.35rem 0.8rem;
+                                            border-radius: 12px;
+                                            font-size: 0.8rem;
+                                            font-weight: 500;
+                                            border: 1px solid #e2e8f0;
+                                        ">
+                                            #{{ tag }}
+                                        </span>
+                                    {% endfor %}
+                                    {% if post.tags|length > 4 %}
+                                        <span style="
+                                            background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+                                            color: var(--cloud-600);
+                                            padding: 0.35rem 0.8rem;
+                                            border-radius: 12px;
+                                            font-size: 0.8rem;
+                                            font-weight: 500;
+                                            border: 1px solid #e2e8f0;
+                                        ">
+                                            +{{ post.tags|length - 4 }}
+                                        </span>
+                                    {% endif %}
+                                </div>
+                            {% endif %}
+                        </div>
+
+                        <!-- Pied de carte - ARRIÈRE-PLAN GRIS CLAIR -->
+                        <div style="
+                            padding: 1rem 1.5rem;
+                            background: linear-gradient(135deg, #f9fafb 0%, #f4f5f7 100%);
+                            border-top: 1px solid #e5e7eb;
+                            margin-top: auto;
+                        ">
+                            <div style="display: flex; justify-content: space-between; align-items: center;">
+                                <div style="display: flex; align-items: center; gap: 0.75rem;">
+                                    <!-- Avatar -->
+                                    <div style="
+                                        width: 36px;
+                                        height: 36px;
+                                        background: linear-gradient(135deg, var(--primary-300) 0%, var(--primary-400) 100%);
+                                        border-radius: 50%;
+                                        display: flex;
+                                        align-items: center;
+                                        justify-content: center;
+                                        color: white;
+                                        font-weight: 600;
+                                        font-size: 0.9rem;
+                                        box-shadow: 0 2px 5px rgba(59, 130, 246, 0.15);
+                                    ">
+                                        {{ post.prenom[0] }}{{ post.nom[0] }}
+                                    </div>
+                                    <div>
+                                        <!-- Nom en couleur normale (pas grisée) -->
+                                        <div style="font-weight: 600; color: var(--cloud-800); font-size: 0.95rem;">
+                                            {{ post.prenom }} {{ post.nom }}
+                                        </div>
+                                        {% if post.filiere %}
+                                            <div style="font-size: 0.8rem; color: var(--cloud-600); display: flex; align-items: center; gap: 0.25rem; margin-top: 2px;">
+                                                <i class="fas fa-graduation-cap" style="font-size: 0.7rem;"></i>
+                                                {{ post.filiere }}
+                                            </div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                                
+                                <div style="display: flex; align-items: center; gap: 0.75rem;">
+                                    <!-- Date - couleur normale -->
+                                    <div style="
+                                        color: var(--cloud-600);
+                                        font-size: 0.8rem;
+                                        display: flex;
+                                        align-items: center;
+                                        gap: 0.4rem;
+                                        background: white;
+                                        padding: 0.35rem 0.75rem;
+                                        border-radius: 12px;
+                                        border: 1px solid #e5e7eb;
+                                        font-weight: 500;
+                                    ">
+                                        <i class="far fa-clock" style="font-size: 0.75rem;"></i>
+                                        {{ post.date_publication.strftime('%d/%m/%Y') }}
+                                    </div>
+                                    
+                                    {% if current_user.is_authenticated and current_user.id != post.utilisateur_id %}
+                                        <a href="{{ url_for('conversation', user_id=post.utilisateur_id) }}" 
+                                           style="
+                                               padding: 0.4rem 0.9rem;
+                                               font-size: 0.8rem;
+                                               border-radius: 8px;
+                                               background: linear-gradient(135deg, var(--primary-400) 0%, var(--primary-500) 100%);
+                                               color: white;
+                                               text-decoration: none;
+                                               font-weight: 500;
+                                               display: flex;
+                                               align-items: center;
+                                               gap: 0.4rem;
+                                               border: none;
+                                               transition: all 0.2s;
+                                               box-shadow: 0 2px 8px rgba(59, 130, 246, 0.15);
+                                           "
+                                           onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 4px 12px rgba(59, 130, 246, 0.25)';"
+                                           onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 2px 8px rgba(59, 130, 246, 0.15)';">
+                                            <i class="fas fa-comment" style="font-size: 0.75rem;"></i>
+                                            Contacter
+                                        </a>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <!-- Message quand il n'y a pas de publications -->
+                <div style="
+                    background: white;
+                    border-radius: 12px;
+                    padding: 3rem 2rem;
+                    text-align: center;
+                    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.04);
+                    border: 1px solid #e2e8f0;
+                ">
+                    <div style="
+                        width: 80px;
+                        height: 80px;
+                        background: linear-gradient(135deg, var(--primary-100) 0%, var(--primary-200) 100%);
+                        border-radius: 50%;
+                        display: flex;
+                        align-items: center;
+                        justify-content: center;
+                        margin: 0 auto 1.5rem;
+                        border: 3px solid white;
+                        box-shadow: 0 4px 10px rgba(59, 130, 246, 0.1);
+                    ">
+                        <i class="fas fa-newspaper" style="font-size: 2rem; color: var(--primary-500);"></i>
+                    </div>
+                    <h3 style="margin-bottom: 1rem; color: var(--cloud-800); font-weight: 600;">
+                        Aucune publication pour le moment
+                    </h3>
+                    <p style="color: var(--cloud-500); margin-bottom: 2rem; max-width: 400px; margin-left: auto; margin-right: auto;">
+                        {% if current_user.is_authenticated %}
+                            Soyez le premier à publier et à partager vos connaissances avec la communauté !
+                        {% else %}
+                            <a href="{{ url_for('register') }}" style="color: var(--primary-600); font-weight: 600; text-decoration: none; border-bottom: 1px dashed var(--primary-300);">
+                                Inscrivez-vous
+                            </a> 
+                            pour voir et créer des publications
+                        {% endif %}
+                    </p>
+                    {% if current_user.is_authenticated %}
+                        <a href="{{ url_for('create_post') }}" 
+                           class="btn btn-primary" 
+                           style="
+                               background: linear-gradient(135deg, var(--primary-500) 0%, var(--primary-600) 100%); 
+                               border: none; 
+                               border-radius: 10px; 
+                               padding: 0.75rem 1.5rem; 
+                               font-weight: 500; 
+                               box-shadow: 0 4px 12px rgba(59, 130, 246, 0.2);
+                               display: inline-flex;
+                               align-items: center;
+                               gap: 0.5rem;
+                           ">
+                            <i class="fas fa-plus"></i>
+                            Créer ma première publication
+                        </a>
+                    {% endif %}
+                </div>
+            {% endif %}
+        </div>
+    </div>
+
+
+</div>
+
+<style>
+    /* Custom styles */
+    .hero-section {
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .hero-section::before {
+        content: '';
+        position: absolute;
+        top: -50%;
+        left: -50%;
+        width: 200%;
+        height: 200%;
+        background: radial-gradient(circle at 30% 30%, rgba(59, 130, 246, 0.03) 0%, transparent 50%),
+                    radial-gradient(circle at 70% 70%, rgba(99, 102, 241, 0.03) 0%, transparent 50%);
+        z-index: -1;
+    }
+    
+    .stat-card {
+        transition: all 0.3s ease;
+        border: 1px solid #e2e8f0;
+    }
+    
+    .stat-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 10px 25px -3px rgba(0, 0, 0, 0.08) !important;
+        border-color: rgba(59, 130, 246, 0.2);
+    }
+    
+    /* Style pour les cartes de publications modernes - EFFETS BLEUS AU SURVOL */
+    .publication-card-modern {
+        transition: all 0.3s ease;
+        position: relative;
+    }
+    
+    .publication-card-modern:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 12px 25px rgba(59, 130, 246, 0.12) !important;
+        border-color: var(--primary-200);
+    }
+    
+    /* Effet de lueur bleue au survol */
+    .publication-card-modern:hover::before {
+        content: '';
+        position: absolute;
+        top: -2px;
+        left: -2px;
+        right: -2px;
+        bottom: -2px;
+        background: linear-gradient(135deg, rgba(59, 130, 246, 0.08), rgba(59, 130, 246, 0.03));
+        border-radius: 14px;
+        z-index: -1;
+    }
+    
+    /* Animation pour les bandes colorées en haut - maintenant toujours bleu */
+    .publication-card-modern:hover > div:first-child {
+        height: 5px;
+        transition: height 0.3s ease;
+        background: linear-gradient(90deg, var(--primary-600) 0%, var(--primary-500) 100%) !important;
+    }
+    
+    /* Effet sur le bouton Contacter au survol de la carte */
+    .publication-card-modern:hover .contact-btn {
+        background: linear-gradient(135deg, var(--primary-500) 0%, var(--primary-600) 100%) !important;
+        box-shadow: 0 4px 15px rgba(59, 130, 246, 0.25) !important;
+    }
+    
+    /* Animation pour les avatars au survol */
+    .publication-card-modern:hover > div:last-child > div:first-child > div:first-child > div:first-child {
+        background: linear-gradient(135deg, var(--primary-400) 0%, var(--primary-500) 100%) !important;
+        transform: scale(1.05);
+        transition: transform 0.3s ease, background 0.3s ease;
+        box-shadow: 0 3px 8px rgba(59, 130, 246, 0.2);
+    }
+    
+    /* Effet sur le nom au survol */
+    .publication-card-modern:hover > div:last-child > div:first-child > div:first-child > div:nth-child(2) > div:first-child {
+        color: var(--primary-600) !important;
+        transition: color 0.3s ease;
+    }
+    
+    /* Effet sur le fond gris de la partie profil au survol */
+    .publication-card-modern:hover > div:last-child {
+        background: linear-gradient(135deg, #f1f3f5 0%, #eceef0 100%) !important;
+        border-top: 1px solid #d1d5db;
+        transition: background 0.3s ease, border-color 0.3s ease;
+    }
+    
+    /* Responsive */
+    @media (max-width: 1024px) {
+        .stats-container {
+            grid-template-columns: repeat(2, 1fr) !important;
+        }
+        
+        .publications-grid {
+            grid-template-columns: 1fr !important;
+        }
+        
+        .main-content {
+            flex-direction: column !important;
+        }
+        
+        .publication-card-wrapper {
+            margin-bottom: 1.5rem;
+        }
+    }
+    
+    @media (max-width: 768px) {
+        .hero-section .glass-effect {
+            padding: 2rem 1.5rem !important;
+        }
+        
+        .stat-card {
+            min-width: 150px !important;
+            padding: 1.5rem !important;
+        }
+        
+        .publication-card-modern {
+            padding: 1.25rem !important;
+        }
+        
+        .publication-header, .publication-content, .publication-footer {
+            padding-left: 1.25rem !important;
+            padding-right: 1.25rem !important;
+        }
+        
+        .btn {
+            padding: 0.75rem 1.25rem !important;
+        }
+        
+        .publications-grid {
+            grid-template-columns: 1fr !important;
+        }
+        
+        /* Barre de recherche responsive */
+        .search-form {
+            flex-direction: column !important;
+        }
+        
+        .search-form > div {
+            margin-bottom: 0.75rem;
+            width: 100%;
+        }
+        
+        .search-form button {
+            width: 100%;
+            margin-top: 0.5rem;
+        }
+    }
+    
+    @media (max-width: 480px) {
+        .stats-container {
+            flex-direction: column !important;
+            gap: 1rem !important;
+        }
+        
+        .stat-card {
+            min-width: 100% !important;
+        }
+        
+        .publications-grid {
+            gap: 1rem !important;
+        }
+        
+        .d-flex {
+            flex-direction: column !important;
+            gap: 1rem !important;
+        }
+        
+        .publication-card-modern {
+            margin-bottom: 1rem;
+        }
+        
+        h1.text-gradient {
+            font-size: 2.2rem !important;
+        }
+        
+        /* Désactiver l'effet de lueur sur mobile pour la performance */
+        .publication-card-modern:hover::before {
+            display: none;
+        }
+    }
+</style>
+
+<script>
+    // Animation for stats
+    document.addEventListener('DOMContentLoaded', function() {
+        // Animate stat numbers
+        const statNumbers = document.querySelectorAll('.stat-number');
+        statNumbers.forEach(stat => {
+            const target = parseInt(stat.textContent);
+            if (!isNaN(target)) {
+                let current = 0;
+                const increment = target / 30;
+                const timer = setInterval(() => {
+                    current += increment;
+                    if (current >= target) {
+                        current = target;
+                        clearInterval(timer);
+                    }
+                    stat.textContent = Math.floor(current);
+                }, 50);
+            }
+        });
+        
+        // Add interactive effects to publication cards - EFFETS BLEUS
+        const cardModerns = document.querySelectorAll('.publication-card-modern');
+        cardModerns.forEach(card => {
+            card.addEventListener('mouseenter', function() {
+                this.style.transform = 'translateY(-5px)';
+                this.style.boxShadow = '0 12px 25px rgba(59, 130, 246, 0.12)';
+                this.style.borderColor = 'var(--primary-200)';
+                
+                // Animer la bande colorée en haut - toujours bleu
+                const topBar = this.querySelector('div:first-child');
+                if (topBar) {
+                    topBar.style.height = '5px';
+                    topBar.style.background = 'linear-gradient(90deg, var(--primary-600) 0%, var(--primary-500) 100%)';
+                }
+                
+                // Animer l'avatar
+                const avatar = this.querySelector('div:last-child > div:first-child > div:first-child > div:first-child');
+                if (avatar) {
+                    avatar.style.transform = 'scale(1.05)';
+                    avatar.style.background = 'linear-gradient(135deg, var(--primary-400) 0%, var(--primary-500) 100%)';
+                    avatar.style.boxShadow = '0 3px 8px rgba(59, 130, 246, 0.2)';
+                }
+                
+                // Animer le nom (le rendre un peu plus foncé au survol)
+                const name = this.querySelector('div:last-child > div:first-child > div:first-child > div:nth-child(2) > div:first-child');
+                if (name) {
+                    name.style.color = 'var(--primary-600)';
+                }
+                
+                // Animer le fond de la partie profil
+                const profileSection = this.querySelector('div:last-child');
+                if (profileSection) {
+                    profileSection.style.background = 'linear-gradient(135deg, #f1f3f5 0%, #eceef0 100%)';
+                    profileSection.style.borderTop = '1px solid #d1d5db';
+                }
+            });
+            
+            card.addEventListener('mouseleave', function() {
+                this.style.transform = 'translateY(0)';
+                this.style.boxShadow = '0 4px 12px rgba(0, 0, 0, 0.04)';
+                this.style.borderColor = '#e2e8f0';
+                
+                // Rétablir la bande colorée en haut
+                const topBar = this.querySelector('div:first-child');
+                if (topBar) {
+                    topBar.style.height = '4px';
+                    topBar.style.background = 'linear-gradient(90deg, var(--primary-500) 0%, var(--primary-400) 100%)';
+                }
+                
+                // Rétablir l'avatar
+                const avatar = this.querySelector('div:last-child > div:first-child > div:first-child > div:first-child');
+                if (avatar) {
+                    avatar.style.transform = 'scale(1)';
+                    avatar.style.background = 'linear-gradient(135deg, var(--primary-300) 0%, var(--primary-400) 100%)';
+                    avatar.style.boxShadow = '0 2px 5px rgba(59, 130, 246, 0.15)';
+                }
+                
+                // Rétablir le nom
+                const name = this.querySelector('div:last-child > div:first-child > div:first-child > div:nth-child(2) > div:first-child');
+                if (name) {
+                    name.style.color = 'var(--cloud-800)';
+                }
+                
+                // Rétablir le fond de la partie profil
+                const profileSection = this.querySelector('div:last-child');
+                if (profileSection) {
+                    profileSection.style.background = 'linear-gradient(135deg, #f9fafb 0%, #f4f5f7 100%)';
+                    profileSection.style.borderTop = '1px solid #e5e7eb';
+                }
+            });
+        });
+        
+        // Add subtle shadow to stat cards on hover
+        const statCards = document.querySelectorAll('.stat-card');
+        statCards.forEach(card => {
+            card.addEventListener('mouseenter', function() {
+                this.style.transform = 'translateY(-5px)';
+                this.style.boxShadow = '0 10px 25px rgba(59, 130, 246, 0.1)';
+            });
+            
+            card.addEventListener('mouseleave', function() {
+                this.style.transform = 'translateY(0)';
+                this.style.boxShadow = 'var(--shadow)';
+            });
+        });
+        
+        // Add hover effect to contact buttons
+        const contactButtons = document.querySelectorAll('a[href*="conversation"]');
+        contactButtons.forEach(btn => {
+            btn.addEventListener('mouseenter', function() {
+                this.style.transform = 'translateY(-2px)';
+                this.style.boxShadow = '0 4px 12px rgba(59, 130, 246, 0.25)';
+            });
+            
+            btn.addEventListener('mouseleave', function() {
+                this.style.transform = 'translateY(0)';
+                this.style.boxShadow = '0 2px 8px rgba(59, 130, 246, 0.15)';
+            });
+        });
+    });
+</script>
+{% endblock %}

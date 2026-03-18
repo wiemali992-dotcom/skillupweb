@@ -1,0 +1,1118 @@
+from flask import Flask, render_template, request, redirect, url_for, flash, jsonify, session
+from flask_login import LoginManager, UserMixin, login_user, logout_user, login_required, current_user
+import psycopg2
+from psycopg2.extras import RealDictCursor
+from werkzeug.security import generate_password_hash, check_password_hash
+from datetime import datetime, timedelta
+import json
+
+app = Flask(__name__)
+app.secret_key = 'votre_cle_secrete_tres_longue_changez_cela_12345'
+app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(days=7)
+
+# Initialiser Flask-Login
+login_manager = LoginManager()
+login_manager.init_app(app)
+login_manager.login_view = 'login'
+
+# Configuration de la base de données
+def get_db_connection():
+    try:
+        conn = psycopg2.connect(
+            host="localhost",
+            database="dbskillup",
+            user="postgres",
+            password="postgres",  # ← METTEZ VOTRE MOT DE PASSE POSTGRES ICI
+            cursor_factory=RealDictCursor
+        )
+        return conn
+    except Exception as e:
+        print(f"❌ ERREUR CONNEXION DB: {e}")
+        return None
+
+# Test de connexion au démarrage
+try:
+    conn = get_db_connection()
+    if conn:
+        print("✅ Connexion à PostgreSQL réussie!")
+        conn.close()
+    else:
+        print("❌ Échec de connexion à PostgreSQL")
+except Exception as e:
+    print(f"❌ Erreur de connexion: {e}")
+
+# Modèle utilisateur pour Flask-Login
+class User(UserMixin):
+    def __init__(self, user_data):
+        self.id = user_data['id']
+        self.nom = user_data['nom']
+        self.prenom = user_data['prenom']
+        self.email = user_data['email']
+        self.filiere = user_data.get('filiere', '')
+        self.annee_etude = user_data.get('annee_etude', '')
+
+@login_manager.user_loader
+def load_user(user_id):
+    try:
+        conn = get_db_connection()
+        if not conn:
+            return None
+        
+        cur = conn.cursor()
+        cur.execute("SELECT * FROM utilisateurs WHERE id = %s", (int(user_id),))
+        user_data = cur.fetchone()
+        cur.close()
+        conn.close()
+        
+        if user_data:
+            return User(user_data)
+        return None
+    except Exception as e:
+        print(f"Erreur load_user: {e}")
+        return None
+
+# Middleware pour injecter les données dans tous les templates
+@app.context_processor
+def inject_user():
+    notifications_count = 0
+    user_score = 0
+    
+    if current_user.is_authenticated:
+        try:
+            conn = get_db_connection()
+            cur = conn.cursor()
+            
+            # Notifications
+            cur.execute("SELECT COUNT(*) as count FROM messages WHERE destinataire_id = %s AND est_lu = FALSE", 
+                       (current_user.id,))
+            result = cur.fetchone()
+            notifications_count = result['count'] if result else 0
+            
+            # Score
+            cur.execute("SELECT score, total_helps, rating FROM utilisateurs WHERE id = %s", 
+                       (current_user.id,))
+            user_data = cur.fetchone()
+            if user_data:
+                user_score = user_data['score'] if user_data['score'] is not None else 0
+            
+            cur.close()
+            conn.close()
+        except Exception as e:
+            print(f"Erreur inject_user: {e}")
+            notifications_count = 0
+            user_score = 0
+    
+    return dict(current_user=current_user, 
+                notifications_count=notifications_count,
+                user_score=user_score)
+
+# ===== PAGE D'ACCUEIL =====
+@app.route('/')
+def index():
+    """Page d'accueil avec statistiques"""
+    try:
+        conn = get_db_connection()
+        cur = conn.cursor()
+        
+        # Récupérer les publications récentes
+        cur.execute("""
+        SELECT p.*, u.nom, u.prenom, u.filiere, u.score
+        FROM publications p
+        JOIN utilisateurs u ON p.utilisateur_id = u.id
+        WHERE p.est_actif = TRUE
+        ORDER BY p.date_publication DESC
+        LIMIT 20
+        """)
+        publications = cur.fetchall()
+        
+        # Récupérer les compétences populaires
+        cur.execute("SELECT DISTINCT competence FROM competences_utilisateur ORDER BY competence LIMIT 15")
+        competences = cur.fetchall()
+        
+        # Statistiques
+        cur.execute("SELECT COUNT(*) as count FROM utilisateurs")
+        user_count = cur.fetchone()['count']
+        
+        cur.execute("SELECT COUNT(*) as count FROM publications WHERE est_actif = TRUE")
+        post_count = cur.fetchone()['count']
+        
+        cur.execute("SELECT COUNT(DISTINCT competence) as count FROM competences_utilisateur")
+        competence_count = cur.fetchone()['count']
+        
+        cur.close()
+        conn.close()
+        
+        return render_template('index.html', 
+                             publications=publications, 
+                             competences=competences,
+                             user_count=user_count,
+                             post_count=post_count,
+                             competence_count=competence_count)
+        
+    except Exception as e:
+        print(f"Erreur index: {e}")
+        return render_template('index.html', 
+                             publications=[], 
+                             competences=[],
+                             user_count=0,
+                             post_count=0,
+                             competence_count=0)
+
+# ===== AUTHENTIFICATION =====
+@app.route('/register', methods=['GET', 'POST'])
+def register():
+    if request.method == 'POST':
+        try:
+            nom = request.form['nom']
+            prenom = request.form['prenom']
+            email = request.form['email']
+            password = request.form['password']
+            confirm_password = request.form['confirm_password']
+            
+            if password != confirm_password:
+                flash("Les mots de passe ne correspondent pas", "danger")
+                return redirect(url_for('register'))
+            
+            # Vérifier si l'email existe déjà
+            conn = get_db_connection()
+            cur = conn.cursor()
+            cur.execute("SELECT email FROM utilisateurs WHERE email = %s", (email,))
+            existing_user = cur.fetchone()
+            
+            if existing_user:
+                flash("Cet email est déjà utilisé", "danger")
+                return redirect(url_for('register'))
+            
+            # Créer l'utilisateur
+            password_hash = generate_password_hash(password)
+            filiere = request.form.get('filiere', '')
+            annee_etude = request.form.get('annee_etude')
+            
+            cur.execute("""
+            INSERT INTO utilisateurs (nom, prenom, email, password_hash, filiere, annee_etude, score)
+            VALUES (%s, %s, %s, %s, %s, %s, 0)
+            RETURNING id, nom, prenom, email
+            """, (nom, prenom, email, password_hash, filiere, annee_etude))
+            
+            user = cur.fetchone()
+            conn.commit()
+            cur.close()
+            conn.close()
+            
+            flash("Compte créé avec succès! Connectez-vous maintenant.", "success")
+            return redirect(url_for('login'))
+            
+        except Exception as e:
+            print(f"Erreur register: {e}")
+            flash("Erreur lors de la création du compte", "danger")
+    
+    return render_template('register.html')
+
+@app.route('/login', methods=['GET', 'POST'])
+def login():
+    if request.method == 'POST':
+        email = request.form['email']
+        password = request.form['password']
+        
+        conn = get_db_connection()
+        cur = conn.cursor()
+        cur.execute("SELECT * FROM utilisateurs WHERE email = %s", (email,))
+        user_data = cur.fetchone()
+        cur.close()
+        conn.close()
+        
+        if user_data and check_password_hash(user_data['password_hash'], password):
+            user = User(user_data)
+            login_user(user)
+            flash(f"Bienvenue {user.prenom}!", "success")
+            return redirect(url_for('index'))
+        else:
+            flash("Email ou mot de passe incorrect", "danger")
+    
+    return render_template('login.html')
+
+@app.route('/logout')
+@login_required
+def logout():
+    logout_user()
+    flash("Vous êtes déconnecté", "info")
+    return redirect(url_for('index'))
+
+# ===== PROFILS =====
+@app.route('/profile/<int:user_id>')
+def profile(user_id):
+    """Voir le profil d'un utilisateur"""
+    try:
+        conn = get_db_connection()
+        cur = conn.cursor()
+        
+        # Récupérer l'utilisateur AVEC son score
+        cur.execute("""
+        SELECT id, nom, prenom, email, filiere, annee_etude, 
+               telephone, description, date_inscription,
+               COALESCE(score, 0) as score,
+               COALESCE(total_helps, 0) as total_helps,
+               COALESCE(rating, 5.0) as rating
+        FROM utilisateurs WHERE id = %s
+        """, (user_id,))
+        
+        user = cur.fetchone()
+        
+        if not user:
+            cur.close()
+            conn.close()
+            flash("Utilisateur non trouvé", "danger")
+            return redirect(url_for('index'))
+        
+        # Récupérer ses compétences
+        cur.execute("SELECT competence, niveau FROM competences_utilisateur WHERE utilisateur_id = %s", (user_id,))
+        competences = cur.fetchall()
+        
+        # Récupérer ses publications
+        cur.execute("""
+        SELECT * FROM publications 
+        WHERE utilisateur_id = %s AND est_actif = TRUE
+        ORDER BY date_publication DESC
+        LIMIT 10
+        """, (user_id,))
+        publications = cur.fetchall()
+        
+        # Récupérer ses badges
+        cur.execute("SELECT * FROM user_badges WHERE user_id = %s ORDER BY earned_at DESC", (user_id,))
+        badges = cur.fetchall()
+        
+        cur.close()
+        conn.close()
+        
+        # Vérifier si c'est le profil de l'utilisateur connecté
+        is_own_profile = current_user.is_authenticated and current_user.id == user_id
+        
+        return render_template('profile.html',
+                             user_profile=user,
+                             competences=competences,
+                             publications=publications,
+                             badges=badges,
+                             is_own_profile=is_own_profile)
+        
+    except Exception as e:
+        print(f"❌ Erreur profile: {e}")
+        flash("Erreur lors du chargement du profil", "danger")
+        return redirect(url_for('index'))
+
+@app.route('/myprofile')
+@login_required
+def myprofile():
+    """Mon propre profil"""
+    return profile(current_user.id)
+
+@app.route('/edit_profile', methods=['GET', 'POST'])
+@login_required
+def edit_profile():
+    """Modifier son profil"""
+    if request.method == 'POST':
+        try:
+            conn = get_db_connection()
+            cur = conn.cursor()
+            
+            # Mettre à jour les informations de base
+            cur.execute("""
+            UPDATE utilisateurs 
+            SET nom = %s, prenom = %s, filiere = %s, annee_etude = %s, 
+                telephone = %s, description = %s
+            WHERE id = %s
+            """, (
+                request.form.get('nom'),
+                request.form.get('prenom'),
+                request.form.get('filiere'),
+                request.form.get('annee_etude'),
+                request.form.get('telephone'),
+                request.form.get('description'),
+                current_user.id
+            ))
+            
+            # Gestion des compétences
+            competences = request.form.getlist('competences[]')
+            niveaux = request.form.getlist('niveaux[]')
+            
+            # Supprimer toutes les compétences existantes
+            cur.execute("DELETE FROM competences_utilisateur WHERE utilisateur_id = %s", 
+                       (current_user.id,))
+            
+            # Ajouter les nouvelles compétences
+            for competence, niveau in zip(competences, niveaux):
+                if competence and competence.strip():
+                    cur.execute("""
+                    INSERT INTO competences_utilisateur (utilisateur_id, competence, niveau)
+                    VALUES (%s, %s, %s)
+                    """, (current_user.id, competence.strip(), niveau or 'Intermediaire'))
+            
+            conn.commit()
+            cur.close()
+            conn.close()
+            
+            flash("✅ Profil mis à jour avec succès!", "success")
+            return redirect(url_for('myprofile'))
+            
+        except Exception as e:
+            print(f"Erreur lors de la mise à jour du profil: {e}")
+            flash("❌ Erreur lors de la mise à jour du profil", "danger")
+    
+    # GET: Afficher le formulaire avec les données actuelles
+    try:
+        conn = get_db_connection()
+        cur = conn.cursor()
+        
+        cur.execute("SELECT * FROM utilisateurs WHERE id = %s", (current_user.id,))
+        user = cur.fetchone()
+        
+        cur.execute("SELECT competence, niveau FROM competences_utilisateur WHERE utilisateur_id = %s", 
+                   (current_user.id,))
+        competences = cur.fetchall()
+        
+        cur.close()
+        conn.close()
+        
+        return render_template('edit_profile.html', user=user, competences=competences)
+        
+    except Exception as e:
+        print(f"Erreur lors du chargement du formulaire: {e}")
+        flash("Erreur lors du chargement des données", "danger")
+        return redirect(url_for('myprofile'))
+
+# ===== AJOUTER UNE COMPÉTENCE =====
+@app.route('/add_competence', methods=['POST'])
+@login_required
+def add_competence():
+    """Ajouter une compétence au profil"""
+    try:
+        competence = request.form.get('competence', '').strip()
+        niveau = request.form.get('niveau', 'Intermediaire')
+        
+        if not competence:
+            flash("Veuillez entrer une compétence", "danger")
+            return redirect(url_for('myprofile'))
+        
+        conn = get_db_connection()
+        cur = conn.cursor()
+        
+        # Vérifier si la compétence existe déjà
+        cur.execute("""
+        SELECT * FROM competences_utilisateur 
+        WHERE utilisateur_id = %s AND competence = %s
+        """, (current_user.id, competence))
+        
+        if cur.fetchone():
+            flash("Cette compétence est déjà dans votre profil", "warning")
+        else:
+            # Ajouter la compétence
+            cur.execute("""
+            INSERT INTO competences_utilisateur (utilisateur_id, competence, niveau)
+            VALUES (%s, %s, %s)
+            """, (current_user.id, competence, niveau))
+            conn.commit()
+            flash(f"Compétence '{competence}' ajoutée avec succès!", "success")
+        
+        cur.close()
+        conn.close()
+        
+    except Exception as e:
+        print(f"Erreur lors de l'ajout de compétence: {e}")
+        flash("Erreur lors de l'ajout de la compétence", "danger")
+    
+    return redirect(url_for('myprofile'))
+
+# ===== GESTION DES PUBLICATIONS =====
+@app.route('/create_post', methods=['GET', 'POST'])
+@login_required
+def create_post():
+    """Créer une nouvelle publication"""
+    if request.method == 'POST':
+        try:
+            titre = request.form.get('titre', '').strip()
+            contenu = request.form.get('contenu', '').strip()
+            type_publication = request.form.get('type_publication', 'offre')
+            categorie = request.form.get('categorie', '').strip()
+            tags = request.form.get('tags', '').strip()
+            
+            if not titre or not contenu:
+                flash("Le titre et le contenu sont obligatoires", "danger")
+                return redirect(url_for('create_post'))
+            
+            # Convertir les tags
+            tags_array = []
+            if tags:
+                tags_array = [tag.strip() for tag in tags.split(',') if tag.strip()]
+            
+            conn = get_db_connection()
+            cur = conn.cursor()
+            
+            cur.execute("""
+            INSERT INTO publications 
+            (utilisateur_id, type_publication, titre, contenu, categorie, tags)
+            VALUES (%s, %s, %s, %s, %s, %s)
+            RETURNING id
+            """, (current_user.id, type_publication, titre, contenu, categorie, tags_array))
+            
+            conn.commit()
+            cur.close()
+            conn.close()
+            
+            flash("✅ Publication créée avec succès!", "success")
+            return redirect(url_for('index'))
+            
+        except Exception as e:
+            print(f"Erreur create_post: {e}")
+            flash("Erreur lors de la création de la publication", "danger")
+    
+    return render_template('create_post.html')
+
+@app.route('/edit_post/<int:post_id>', methods=['GET', 'POST'])
+@login_required
+def edit_post(post_id):
+    """Modifier une publication"""
+    try:
+        conn = get_db_connection()
+        cur = conn.cursor()
+        
+        # Récupérer la publication
+        cur.execute("SELECT * FROM publications WHERE id = %s", (post_id,))
+        post = cur.fetchone()
+        
+        if not post:
+            cur.close()
+            conn.close()
+            flash("Publication non trouvée", "danger")
+            return redirect(url_for('index'))
+        
+        # Vérifier que l'utilisateur est le propriétaire
+        if post['utilisateur_id'] != current_user.id:
+            cur.close()
+            conn.close()
+            flash("Vous ne pouvez pas modifier cette publication", "danger")
+            return redirect(url_for('index'))
+        
+        if request.method == 'POST':
+            # Mettre à jour la publication
+            titre = request.form['titre']
+            contenu = request.form['contenu']
+            type_publication = request.form['type_publication']
+            categorie = request.form.get('categorie', '')
+            tags = request.form.get('tags', '')
+            
+            tags_array = []
+            if tags:
+                tags_array = [tag.strip() for tag in tags.split(',') if tag.strip()]
+            
+            cur.execute("""
+            UPDATE publications 
+            SET titre = %s, contenu = %s, type_publication = %s, 
+                categorie = %s, tags = %s
+            WHERE id = %s
+            """, (titre, contenu, type_publication, categorie, tags_array, post_id))
+            
+            conn.commit()
+            cur.close()
+            conn.close()
+            
+            flash("✅ Publication modifiée avec succès!", "success")
+            return redirect(url_for('index'))
+        
+        # Pour GET: afficher le formulaire avec les données actuelles
+        cur.close()
+        conn.close()
+        
+        # Convertir le tableau de tags en chaîne
+        if post['tags']:
+            post['tags_string'] = ', '.join(post['tags'])
+        else:
+            post['tags_string'] = ''
+        
+        return render_template('edit_post.html', post=post)
+        
+    except Exception as e:
+        print(f"Erreur lors de la modification de la publication: {e}")
+        flash("Erreur lors de la modification", "danger")
+        return redirect(url_for('index'))
+
+@app.route('/delete_post/<int:post_id>', methods=['POST'])
+@login_required
+def delete_post(post_id):
+    """Supprimer une publication"""
+    try:
+        conn = get_db_connection()
+        cur = conn.cursor()
+        
+        # Vérifier que l'utilisateur est le propriétaire
+        cur.execute("SELECT utilisateur_id FROM publications WHERE id = %s", (post_id,))
+        post = cur.fetchone()
+        
+        if not post:
+            cur.close()
+            conn.close()
+            flash("Publication non trouvée", "danger")
+            return redirect(url_for('index'))
+        
+        if post['utilisateur_id'] != current_user.id:
+            cur.close()
+            conn.close()
+            flash("Vous ne pouvez pas supprimer cette publication", "danger")
+            return redirect(url_for('index'))
+        
+        # Supprimer définitivement
+        cur.execute("DELETE FROM publications WHERE id = %s", (post_id,))
+        
+        conn.commit()
+        cur.close()
+        conn.close()
+        
+        flash("✅ Publication supprimée avec succès!", "success")
+        
+    except Exception as e:
+        print(f"Erreur lors de la suppression: {e}")
+        flash("Erreur lors de la suppression", "danger")
+    
+    return redirect(url_for('index'))
+
+# ===== MESSAGERIE SIMPLIFIÉE =====
+@app.route('/messages')
+@login_required
+def messages():
+    """Page de messagerie"""
+    try:
+        conn = get_db_connection()
+        cur = conn.cursor()
+        
+        # Récupérer les conversations (messages reçus et envoyés)
+        cur.execute("""
+        SELECT DISTINCT 
+            CASE 
+                WHEN expediteur_id = %s THEN destinataire_id 
+                ELSE expediteur_id 
+            END as autre_utilisateur_id,
+            MAX(date_envoi) as dernier_message,
+            COUNT(*) FILTER (WHERE destinataire_id = %s AND est_lu = FALSE) as messages_non_lus
+        FROM messages 
+        WHERE expediteur_id = %s OR destinataire_id = %s
+        GROUP BY autre_utilisateur_id
+        ORDER BY dernier_message DESC
+        """, (current_user.id, current_user.id, current_user.id, current_user.id))
+        
+        conversations = cur.fetchall()
+        
+        # Pour chaque conversation, récupérer les infos de l'utilisateur
+        for conv in conversations:
+            cur.execute("SELECT id, nom, prenom, email FROM utilisateurs WHERE id = %s", (conv['autre_utilisateur_id'],))
+            user_info = cur.fetchone()
+            if user_info:
+                conv.update(user_info)
+        
+        cur.close()
+        conn.close()
+        
+        return render_template('messages.html', conversations=conversations)
+        
+    except Exception as e:
+        print(f"Erreur messages: {e}")
+        flash("Erreur lors du chargement des messages", "danger")
+        return render_template('messages.html', conversations=[])
+
+@app.route('/conversation/<int:user_id>', methods=['GET', 'POST'])
+@login_required
+def conversation(user_id):
+    """Conversation avec un utilisateur spécifique"""
+    try:
+        conn = get_db_connection()
+        cur = conn.cursor()
+        
+        # Récupérer les infos de l'autre utilisateur
+        cur.execute("SELECT id, nom, prenom, email FROM utilisateurs WHERE id = %s", (user_id,))
+        other_user = cur.fetchone()
+        
+        if not other_user:
+            flash("Utilisateur non trouvé", "danger")
+            return redirect(url_for('messages'))
+        
+        # Récupérer les messages entre les deux utilisateurs
+        cur.execute("""
+        SELECT m.*, u.nom, u.prenom 
+        FROM messages m
+        JOIN utilisateurs u ON m.expediteur_id = u.id
+        WHERE (expediteur_id = %s AND destinataire_id = %s) 
+           OR (expediteur_id = %s AND destinataire_id = %s)
+        ORDER BY date_envoi ASC
+        """, (current_user.id, user_id, user_id, current_user.id))
+        
+        messages = cur.fetchall()
+        
+        if request.method == 'POST':
+            # Envoyer un message
+            contenu = request.form.get('message', '').strip()
+            if contenu:
+                cur.execute("""
+                INSERT INTO messages (expediteur_id, destinataire_id, contenu)
+                VALUES (%s, %s, %s)
+                """, (current_user.id, user_id, contenu))
+                
+                conn.commit()
+                # Recharger les messages
+                cur.execute("""
+                SELECT m.*, u.nom, u.prenom 
+                FROM messages m
+                JOIN utilisateurs u ON m.expediteur_id = u.id
+                WHERE (expediteur_id = %s AND destinataire_id = %s) 
+                   OR (expediteur_id = %s AND destinataire_id = %s)
+                ORDER BY date_envoi ASC
+                """, (current_user.id, user_id, user_id, current_user.id))
+                
+                messages = cur.fetchall()
+        
+        # Marquer les messages comme lus
+        cur.execute("""
+        UPDATE messages 
+        SET est_lu = TRUE 
+        WHERE destinataire_id = %s AND expediteur_id = %s AND est_lu = FALSE
+        """, (current_user.id, user_id))
+        
+        conn.commit()
+        cur.close()
+        conn.close()
+        
+        return render_template('conversation.html',
+                              other_user=other_user,
+                              messages=messages)
+        
+    except Exception as e:
+        print(f"Erreur conversation: {e}")
+        flash("Erreur lors du chargement de la conversation", "danger")
+        return redirect(url_for('messages'))
+
+# ===== RECHERCHE AMÉLIORÉE =====
+@app.route('/search')
+def search():
+    """Recherche améliorée - publications ET utilisateurs"""
+    competence = request.args.get('competence', '').strip()
+    search_type = request.args.get('type', 'all')  # all, users, posts
+    
+    try:
+        conn = get_db_connection()
+        cur = conn.cursor()
+        
+        # Récupérer toutes les compétences pour les suggestions
+        cur.execute("SELECT DISTINCT competence FROM competences_utilisateur ORDER BY competence")
+        all_competences = cur.fetchall()
+        
+        results = {
+            'posts': [],
+            'users': [],
+            'competence': competence
+        }
+        
+        if competence:
+            search_term = f"%{competence}%"
+            
+            # Rechercher dans les publications (si all ou posts)
+            if search_type in ['all', 'posts']:
+                cur.execute("""
+                SELECT DISTINCT p.*, u.nom, u.prenom, u.filiere, u.score
+                FROM publications p
+                JOIN utilisateurs u ON p.utilisateur_id = u.id
+                WHERE p.est_actif = TRUE 
+                AND (p.titre ILIKE %s OR p.contenu ILIKE %s OR p.tags @> ARRAY[%s])
+                ORDER BY p.date_publication DESC
+                LIMIT 20
+                """, (search_term, search_term, competence))
+                results['posts'] = cur.fetchall()
+            
+            # Rechercher les utilisateurs par compétence (si all ou users)
+            if search_type in ['all', 'users']:
+                cur.execute("""
+                SELECT DISTINCT u.*, 
+                       cu.competence as searched_skill,
+                       cu.niveau as skill_level
+                FROM utilisateurs u
+                JOIN competences_utilisateur cu ON u.id = cu.utilisateur_id
+                WHERE cu.competence ILIKE %s
+                ORDER BY u.score DESC, cu.niveau DESC
+                LIMIT 20
+                """, (search_term,))
+                results['users'] = cur.fetchall()
+        
+        cur.close()
+        conn.close()
+        
+        return render_template('search.html', 
+                              results=results, 
+                              competences=all_competences,
+                              search_term=competence,
+                              search_type=search_type)
+        
+    except Exception as e:
+        print(f"Erreur recherche améliorée: {e}")
+        return render_template('search.html', 
+                              results={'posts': [], 'users': []}, 
+                              competences=[], 
+                              search_term=competence,
+                              search_type=search_type)
+
+# ===== CONTACTER =====
+@app.route('/contact/<int:user_id>')
+@login_required
+def contact(user_id):
+    """Contacter un utilisateur (redirige vers la conversation)"""
+    return redirect(url_for('conversation', user_id=user_id))
+
+# ===== SYSTÈME DE SCORE ET RÉPUTATION =====
+
+@app.route('/request_help/<int:user_id>', methods=['GET', 'POST'])
+@login_required
+def request_help(user_id):
+    """Demander de l'aide à un utilisateur"""
+    if request.method == 'POST':
+        try:
+            skill = request.form.get('skill', '').strip()
+            description = request.form.get('description', '').strip()
+            estimated_time = request.form.get('estimated_time', '')
+            
+            if not skill or not description:
+                flash("Veuillez remplir tous les champs obligatoires", "danger")
+                return redirect(url_for('profile', user_id=user_id))
+            
+            conn = get_db_connection()
+            cur = conn.cursor()
+            
+            # Créer la demande d'aide
+            cur.execute("""
+            INSERT INTO help_transactions 
+            (helper_id, requester_id, skill, description, status)
+            VALUES (%s, %s, %s, %s, 'pending')
+            """, (user_id, current_user.id, skill, description))
+            
+            # Envoyer un message automatique
+            cur.execute("""
+            INSERT INTO messages (expediteur_id, destinataire_id, contenu)
+            VALUES (%s, %s, %s)
+            """, (
+                current_user.id, 
+                user_id, 
+                f"Bonjour ! Je vous ai envoyé une demande d'aide pour la compétence '{skill}'. "
+                f"Description : {description}"
+            ))
+            
+            conn.commit()
+            cur.close()
+            conn.close()
+            
+            flash("✅ Demande d'aide envoyée avec succès !", "success")
+            return redirect(url_for('profile', user_id=user_id))
+            
+        except Exception as e:
+            print(f"Erreur request_help: {e}")
+            flash("Erreur lors de l'envoi de la demande", "danger")
+    
+    return render_template('request_help.html', user_id=user_id)
+# ===== GESTION DES TRANSACTIONS D'AIDE =====
+
+@app.route('/my_helps')
+@login_required
+def my_helps():
+    """Page de gestion des aides"""
+    try:
+        conn = get_db_connection()
+        cur = conn.cursor()
+        
+        # Aides que l'utilisateur a demandées (en tant que demandeur)
+        cur.execute("""
+        SELECT ht.*, 
+               helper.nom as helper_nom, 
+               helper.prenom as helper_prenom
+        FROM help_transactions ht
+        JOIN utilisateurs helper ON ht.helper_id = helper.id
+        WHERE ht.requester_id = %s
+        ORDER BY ht.requested_at DESC
+        """, (current_user.id,))
+        helps_received = cur.fetchall()
+        
+        # Aides que l'utilisateur a fournies (en tant qu'aidant)
+        cur.execute("""
+        SELECT ht.*, 
+               requester.nom as requester_nom, 
+               requester.prenom as requester_prenom
+        FROM help_transactions ht
+        JOIN utilisateurs requester ON ht.requester_id = requester.id
+        WHERE ht.helper_id = %s
+        ORDER BY ht.requested_at DESC
+        """, (current_user.id,))
+        helps_given = cur.fetchall()
+        
+        # Badges
+        cur.execute("SELECT badge_type FROM user_badges WHERE user_id = %s", 
+                   (current_user.id,))
+        badges = cur.fetchall()
+        
+        cur.close()
+        conn.close()
+        
+        return render_template('my_helps.html', 
+                             helps_received=helps_received,
+                             helps_given=helps_given,
+                             badges=badges)
+        
+    except Exception as e:
+        print(f"Erreur my_helps: {e}")
+        flash("Erreur lors du chargement", "danger")
+        return render_template('my_helps.html', 
+                             helps_received=[], 
+                             helps_given=[],
+                             badges=[])
+
+@app.route('/complete_help/<int:transaction_id>', methods=['POST'])
+@login_required
+def complete_help(transaction_id):
+    """Aidant: marquer une aide comme terminée"""
+    try:
+        conn = get_db_connection()
+        cur = conn.cursor()
+        
+        # Vérifier que l'utilisateur est l'aidant
+        cur.execute("""
+        SELECT * FROM help_transactions 
+        WHERE id = %s AND helper_id = %s AND status = 'pending'
+        """, (transaction_id, current_user.id))
+        
+        if not cur.fetchone():
+            cur.close()
+            conn.close()
+            flash("Transaction non trouvée ou déjà traitée", "danger")
+            return redirect(url_for('my_helps'))
+        
+        # Marquer comme terminée
+        cur.execute("""
+        UPDATE help_transactions 
+        SET status = 'completed', 
+            completed_at = CURRENT_TIMESTAMP
+        WHERE id = %s
+        """, (transaction_id,))
+        
+        conn.commit()
+        cur.close()
+        conn.close()
+        
+        flash("✅ Aide marquée comme terminée. En attente de confirmation.", "success")
+        
+    except Exception as e:
+        print(f"Erreur complete_help: {e}")
+        flash("Erreur lors de la mise à jour", "danger")
+    
+    return redirect(url_for('my_helps'))
+@app.route('/confirm_help/<int:transaction_id>', methods=['GET', 'POST'])
+@login_required
+def confirm_help(transaction_id):
+    """Demandeur: confirmer une aide"""
+    if request.method == 'GET':
+        # Afficher le formulaire de confirmation
+        try:
+            conn = get_db_connection()
+            cur = conn.cursor()
+            
+            cur.execute("""
+            SELECT ht.*, u.nom, u.prenom 
+            FROM help_transactions ht
+            JOIN utilisateurs u ON ht.helper_id = u.id
+            WHERE ht.id = %s AND ht.requester_id = %s AND ht.status = 'completed'
+            """, (transaction_id, current_user.id))
+            
+            transaction = cur.fetchone()
+            cur.close()
+            conn.close()
+            
+            if not transaction:
+                flash("Transaction non trouvée ou non terminée", "danger")
+                return redirect(url_for('my_helps'))
+            
+            return render_template('confirm_help.html', transaction=transaction)
+            
+        except Exception as e:
+            print(f"Erreur confirm_help GET: {e}")
+            flash("Erreur", "danger")
+            return redirect(url_for('my_helps'))
+    
+    else:  # POST
+        try:
+            rating = int(request.form.get('rating', 5))
+            feedback = request.form.get('feedback', '').strip()
+            
+            if rating < 1 or rating > 5:
+                flash("La note doit être entre 1 et 5", "danger")
+                return redirect(url_for('confirm_help', transaction_id=transaction_id))
+            
+            conn = get_db_connection()
+            cur = conn.cursor()
+            
+            # Vérifier la transaction
+            cur.execute("""
+            SELECT * FROM help_transactions 
+            WHERE id = %s AND requester_id = %s AND status = 'completed'
+            """, (transaction_id, current_user.id))
+            
+            transaction = cur.fetchone()
+            if not transaction:
+                cur.close()
+                conn.close()
+                flash("Transaction non trouvée", "danger")
+                return redirect(url_for('my_helps'))
+            
+            # EMPÊCHER UN UTILISATEUR DE SE NOTER LUI-MÊME
+            if transaction['helper_id'] == current_user.id:
+                flash("Vous ne pouvez pas vous noter vous-même", "danger")
+                return redirect(url_for('my_helps'))
+            
+            # Calculer les points
+            points = rating * 10
+            
+            # Débogage
+            print(f"DEBUG: Transaction #{transaction_id}")
+            print(f"DEBUG: Aidant ID: {transaction['helper_id']}")
+            print(f"DEBUG: Note: {rating}/5 → {points} points")
+            
+            # 1. Mettre à jour la transaction
+            cur.execute("""
+            UPDATE help_transactions 
+            SET status = 'confirmed', 
+                confirmed_at = CURRENT_TIMESTAMP,
+                rating = %s,
+                feedback = %s
+            WHERE id = %s
+            """, (rating, feedback, transaction_id))
+            
+            # 2. Mettre à jour le score de l'aidant
+            cur.execute("""
+            UPDATE utilisateurs 
+            SET score = score + %s,
+                total_helps = total_helps + 1
+            WHERE id = %s
+            RETURNING score
+            """, (points, transaction['helper_id']))
+            
+            new_score = cur.fetchone()['score']
+            print(f"DEBUG: Nouveau score de l'aidant: {new_score}")
+            
+            # 3. Calculer et mettre à jour la note moyenne
+            cur.execute("""
+            UPDATE utilisateurs 
+            SET rating = (
+                SELECT COALESCE(AVG(rating)::numeric(3,2), 5.00)
+                FROM help_transactions 
+                WHERE helper_id = %s 
+                AND status = 'confirmed' 
+                AND rating IS NOT NULL
+            )
+            WHERE id = %s
+            """, (transaction['helper_id'], transaction['helper_id']))
+            
+            # 4. Vérifier les badges
+            if new_score >= 1000:
+                cur.execute("""
+                INSERT INTO user_badges (user_id, badge_type, score_threshold)
+                SELECT %s, 'helper_gold', 1000
+                WHERE NOT EXISTS (
+                    SELECT 1 FROM user_badges 
+                    WHERE user_id = %s AND badge_type = 'helper_gold'
+                )
+                """, (transaction['helper_id'], transaction['helper_id']))
+            elif new_score >= 500:
+                cur.execute("""
+                INSERT INTO user_badges (user_id, badge_type, score_threshold)
+                SELECT %s, 'helper_silver', 500
+                WHERE NOT EXISTS (
+                    SELECT 1 FROM user_badges 
+                    WHERE user_id = %s AND badge_type = 'helper_silver'
+                )
+                """, (transaction['helper_id'], transaction['helper_id']))
+            elif new_score >= 100:
+                cur.execute("""
+                INSERT INTO user_badges (user_id, badge_type, score_threshold)
+                SELECT %s, 'helper_bronze', 100
+                WHERE NOT EXISTS (
+                    SELECT 1 FROM user_badges 
+                    WHERE user_id = %s AND badge_type = 'helper_bronze'
+                )
+                """, (transaction['helper_id'], transaction['helper_id']))
+            
+            conn.commit()
+            cur.close()
+            conn.close()
+            
+            flash(f"✅ Aide confirmée ! {transaction['helper_id']} a gagné {points} points (score total: {new_score}).", "success")
+            return redirect(url_for('my_helps'))
+            
+        except Exception as e:
+            print(f"ERREUR confirm_help POST: {e}")
+            import traceback
+            traceback.print_exc()
+            flash(f"Erreur lors de la confirmation: {str(e)}", "danger")
+            return redirect(url_for('my_helps'))
+        
+
+
+@app.route('/debug_transactions')
+@login_required
+def debug_transactions():
+    """Page de débogage pour voir les transactions"""
+    try:
+        conn = get_db_connection()
+        cur = conn.cursor()
+        
+        # Toutes les transactions impliquant l'utilisateur
+        cur.execute("""
+        SELECT 
+            ht.id,
+            ht.skill,
+            ht.status,
+            ht.rating,
+            ht.requested_at,
+            ht.completed_at,
+            ht.confirmed_at,
+            helper.nom as helper_nom,
+            helper.prenom as helper_prenom,
+            helper.score as helper_score,
+            requester.nom as requester_nom,
+            requester.prenom as requester_prenom
+        FROM help_transactions ht
+        LEFT JOIN utilisateurs helper ON ht.helper_id = helper.id
+        LEFT JOIN utilisateurs requester ON ht.requester_id = requester.id
+        WHERE ht.helper_id = %s OR ht.requester_id = %s
+        ORDER BY ht.requested_at DESC
+        """, (current_user.id, current_user.id))
+        
+        transactions = cur.fetchall()
+        
+        cur.close()
+        conn.close()
+        
+        return jsonify({
+            'user_id': current_user.id,
+            'transactions': transactions,
+            'count': len(transactions)
+        })
+        
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+# ===== TESTS =====
+@app.route('/test')
+def test():
+    return "✅ Application fonctionnelle!"
+
+@app.route('/test_db')
+def test_db():
+    conn = get_db_connection()
+    cur = conn.cursor()
+    cur.execute("SELECT version()")
+    version = cur.fetchone()
+    cur.close()
+    conn.close()
+    return f"PostgreSQL: {version['version']}"
+
+if __name__ == '__main__':
+    print("\n🚀 Démarrage de SkillUp...")
+    print("🌐 http://localhost:5000")
+    app.run(debug=True, port=5000)
