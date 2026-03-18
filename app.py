@@ -99,50 +99,6 @@ def inject_user():
 @app.route('/')
 def index():
     return "SITE OK 🚀"
-        
-        # Récupérer les publications récentes
-        cur.execute("""
-        SELECT p.*, u.nom, u.prenom, u.filiere, u.score
-        FROM publications p
-        JOIN utilisateurs u ON p.utilisateur_id = u.id
-        WHERE p.est_actif = TRUE
-        ORDER BY p.date_publication DESC
-        LIMIT 20
-        """)
-        publications = cur.fetchall()
-        
-        # Récupérer les compétences populaires
-        cur.execute("SELECT DISTINCT competence FROM competences_utilisateur ORDER BY competence LIMIT 15")
-        competences = cur.fetchall()
-        
-        # Statistiques
-        cur.execute("SELECT COUNT(*) as count FROM utilisateurs")
-        user_count = cur.fetchone()['count']
-        
-        cur.execute("SELECT COUNT(*) as count FROM publications WHERE est_actif = TRUE")
-        post_count = cur.fetchone()['count']
-        
-        cur.execute("SELECT COUNT(DISTINCT competence) as count FROM competences_utilisateur")
-        competence_count = cur.fetchone()['count']
-        
-        cur.close()
-        conn.close()
-        
-        return render_template('index.html', 
-                             publications=publications, 
-                             competences=competences,
-                             user_count=user_count,
-                             post_count=post_count,
-                             competence_count=competence_count)
-        
-    except Exception as e:
-        print(f"Erreur index: {e}")
-        return render_template('index.html', 
-                             publications=[], 
-                             competences=[],
-                             user_count=0,
-                             post_count=0,
-                             competence_count=0)
 
 # ===== AUTHENTIFICATION =====
 @app.route('/register', methods=['GET', 'POST'])
